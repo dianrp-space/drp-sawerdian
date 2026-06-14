@@ -6,7 +6,6 @@ import multer from "multer";
 import dotenv from "dotenv";
 import { decodeQRFromImage } from "./qris-image.js";
 import { calculateCRC } from "./qris-crc.js";
-import { authenticateApiKey } from "./auth.js";
 
 dotenv.config();
 
@@ -86,6 +85,11 @@ app.post("/api/generate", async (req, res) => {
   res.json({ dynamicQris, qrImage });
 });
 
+// Endpoint: cek kesehatan server
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
+});
+
 // Endpoint: upload gambar QR, decode QRIS
 app.post("/api/parse-image", upload.single("file"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
@@ -93,6 +97,7 @@ app.post("/api/parse-image", upload.single("file"), async (req, res) => {
     const qris = await decodeQRFromImage(req.file.buffer);
     res.json({ qris });
   } catch (e) {
+    console.error("Error decoding QR:", e);
     res.status(500).json({ error: "Failed to decode QR" });
   }
 });

@@ -11,9 +11,6 @@ cd backend
 2. Ubah file `.env`:
 
 ```bash
-# API Key untuk autentikasi (ganti dengan key yang aman)
-API_KEY=your_secure_api_key_here
-
 # Server port
 PORT=3001
 NODE_ENV=production
@@ -30,7 +27,13 @@ npm install
 
 ### API Endpoints:
 
-**1. Generate QRIS Dinamis dari Static:**
+**1. Cek Health Server:**
+
+```bash
+curl -X GET http://localhost:3001/api/health
+```
+
+**2. Generate QRIS Dinamis dari Static:**
 
 ```bash
 curl -X POST http://localhost:3001/api/generate \
@@ -41,7 +44,7 @@ curl -X POST http://localhost:3001/api/generate \
   }'
 ```
 
-**2. Ambil static QR dari Gambar QRIS:**
+**3. Ambil static QR dari Gambar QRIS:**
 
 ```bash
 curl -X POST http://localhost:3001/api/parse-image \
@@ -49,6 +52,15 @@ curl -X POST http://localhost:3001/api/parse-image \
 ```
 
 ### Response Format:
+
+**Health Check API:**
+
+```json
+{
+  "status": "OK",
+  "timestamp": "2023-10-25T10:00:00.000Z"
+}
+```
 
 **Generate API:**
 
@@ -68,7 +80,7 @@ curl -X POST http://localhost:3001/api/parse-image \
 ```
 
 ## Frontend Configuration
-
+Frontend langsung dibuka pada index.html
 API dan Frontend tanpa menggunakan API key.
 
 Feel free to use.

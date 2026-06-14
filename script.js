@@ -1,6 +1,10 @@
 // Config API endpoint
 const API_BASE_URL =
-  window.location.hostname === "localhost" ? "http://localhost:3001" : ""; // Untuk production, gunakan relative URL (sama domain)
+  window.location.hostname === "localhost" || 
+  window.location.hostname === "127.0.0.1" || 
+  window.location.protocol === "file:" 
+    ? "http://localhost:3001" 
+    : ""; // Untuk production, gunakan relative URL (sama domain)
 
 // Generate QRIS dinamis otomatis
 async function generateQRIS() {
@@ -26,8 +30,8 @@ async function generateQRIS() {
       body: JSON.stringify({ staticQris, amount, fee: 0 }),
     });
 
-    if (res.status === 401 || res.status === 403) {
-      alert("API authentication failed. Please check API key configuration.");
+    if (!res.ok) {
+      alert("Error generating QRIS from server.");
       return;
     }
 
@@ -114,8 +118,8 @@ document.getElementById("parseBtn").onclick = async function () {
     body: formData,
   });
 
-  if (res.status === 401 || res.status === 403) {
-    alert("API authentication failed. Please check API key configuration.");
+  if (!res.ok) {
+    alert("Failed to parse QR from image!");
     return;
   }
 
