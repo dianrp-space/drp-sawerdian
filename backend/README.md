@@ -11,6 +11,8 @@
    ```bash
    npm start
    ```
+3. Atau jalankan via PM2 (direkomendasikan untuk VPS/Server)
+
 
 Server berjalan di port 3001 (http://localhost:3001)
 

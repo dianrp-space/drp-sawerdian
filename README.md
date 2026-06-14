@@ -48,7 +48,7 @@ curl -X POST http://localhost:3001/api/generate \
 
 ```bash
 curl -X POST http://localhost:3001/api/parse-image \
-  -F "file=@qr_image.jpg"
+  -F "file=@qris_drp_network.jpeg"
 ```
 
 **4. Ambil static QR dari URL Gambar QRIS:**
