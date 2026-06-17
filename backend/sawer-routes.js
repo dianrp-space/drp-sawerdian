@@ -59,6 +59,22 @@ function maskName(name) {
 }
 
 /**
+ * Convert relative URL to absolute URL using BASE_URL from env
+ * If URL is already absolute (starts with http/https) or empty, return as-is
+ */
+function toAbsoluteUrl(url) {
+  if (!url || url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  const baseUrl = process.env.BASE_URL || '';
+  if (!baseUrl) return url; // No BASE_URL configured, return relative URL
+  // Remove trailing slash from baseUrl and ensure url starts with /
+  const cleanBase = baseUrl.replace(/\/$/, '');
+  const cleanPath = url.startsWith('/') ? url : '/' + url;
+  return cleanBase + cleanPath;
+}
+
+/**
  * Parse nominal dari notification text e-wallet Indonesia.
  * Contoh:
  *   "Kamu telah menerima pembayaran Rp 5.023 dari xxx atas nama DIANXXXX."
@@ -166,8 +182,8 @@ router.get('/api/config', async (req, res) => {
         name: settings.creator_name || 'DRP Network',
         tagline: settings.creator_tagline || '',
         website: settings.website_url || '',
-        avatar: settings.avatar_url || '/images/logo_blue.webp',
-        banner: settings.banner_url || '',
+        avatar: toAbsoluteUrl(settings.avatar_url || '/images/logo_blue.webp'),
+        banner: toAbsoluteUrl(settings.banner_url || ''),
         primaryColor: settings.primary_color || '#6c5ce7',
       },
       donation: {
