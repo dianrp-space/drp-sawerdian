@@ -1,124 +1,258 @@
-import express from "express";
-import bodyParser from "body-parser";
-import QRCode from "qrcode";
-import cors from "cors";
-import multer from "multer";
-import dotenv from "dotenv";
-import { decodeQRFromImage } from "./qris-image.js";
-import { calculateCRC } from "./qris-crc.js";
+/**
+ * Sawerdian - Main Server
+ *
+ * Stack: Express + PostgreSQL + Express Session
+ * Routes:
+ *   - Public sawer: /api/config, /api/donations, /api/leaderboard
+ *   - Admin: /api/admin/*
+ *   - Static: /, /leaderboard, /admin, /images/*, /assets/*, /uploads/*
+ */
+import express from 'express';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import helmet from 'helmet';
+import compression from 'compression';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+import { buildSessionMiddleware } from './auth.js';
+import { testConnection } from './db.js';
+import sawerRoutes from './sawer-routes.js';
+import adminRoutes from './admin-routes.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-const upload = multer();
+const PORT = parseInt(process.env.PORT || '3003', 10);
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Helper: parse static QRIS, inject nominal, return dynamic QRIS (dengan CRC)
-function generateDynamicQRIS(staticQris, amount, fee = 0) {
-  // 1. Ubah tag 01 (setelah tag 00) ke 12, header QRIS tetap utuh
-  let qris = staticQris;
-  // Cari tag 00 (biasanya di awal)
-  if (qris.startsWith("000201")) {
-    // Tag 00 (6 char), tag 01 (4 char: 2 tag, 2 length), value 2 char
-    qris = qris.slice(0, 6) + "010212" + qris.slice(12);
-  } else {
-    // fallback: regex ganti tag 01 length 02 ke 12
-    qris = qris.replace(/01(02)11/, "010212");
-  }
+/* ============================================================
+   SECURITY & MIDDLEWARE
+   ============================================================ */
 
-  // 2. Hapus CRC lama jika ada
-  qris = qris.replace(/6304[0-9A-Fa-f]{4}$/, "");
+// Helmet dengan config yang allow inline style (untuk daisyUI) dan CDN
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com', 'https://cdn.jsdelivr.net'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net'],
+        fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        connectSrc: ["'self'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
-  // 3. Parse QRIS menjadi array tag
-  function parseTags(str) {
-    let tags = [];
-    let i = 0;
-    while (i < str.length) {
-      let tag = str.substr(i, 2);
-      let len = parseInt(str.substr(i + 2, 2), 10);
-      let val = str.substr(i + 4, len);
-      tags.push({ tag, len, val });
-      i += 4 + len;
+app.use(compression());
+// Body parsers — gunakan opsi `verify` untuk capture raw body TANPA consume stream dua kali.
+// (Kalau kita pakai `req.on('data')` manual, stream akan habis dibaca dan body-parser
+//  akan gagal dengan "stream is not readable" — itulah bug yang sebelumnya terjadi.)
+app.use(
+  bodyParser.json({
+    limit: '2mb',
+    verify: (req, res, buf) => {
+      // Simpan raw body (string) untuk debugging di endpoint
+      try {
+        req.rawBody = buf && buf.length ? buf.toString('utf8') : '';
+      } catch {
+        req.rawBody = '';
+      }
+    },
+  })
+);
+app.use(bodyParser.urlencoded({ extended: true, limit: '2mb' }));
+app.use(cookieParser());
+
+// CORS
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow same-origin requests (no Origin header, e.g. curl, server-to-server)
+      if (!origin) return callback(null, true);
+      // In development: allow localhost
+      if (!isProduction) {
+        if (
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:')
+        ) {
+          return callback(null, true);
+        }
+      }
+      // [SECURITY] Di production: WAJIB set ALLOWED_ORIGIN.
+      // Kalau kosong, semua cross-origin request ditolak.
+      if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error('CORS not allowed'));
+    },
+    credentials: true,
+  })
+);
+
+// Trust proxy (untuk di belakang Nginx)
+app.set('trust proxy', 1);
+
+// Session
+app.use(buildSessionMiddleware());
+
+// Request logging — JANGAN log nilai cookie (session hijacking risk)
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    // [SECURITY] Hanya log ada/tidaknya cookie, bukan nilainya
+    const hasCookie = !!req.headers.cookie;
+    console.log(`${req.method} ${req.path} ${res.statusCode} ${ms}ms [cookie:${hasCookie ? 'yes' : 'no'}]`);
+  });
+  next();
+});
+
+
+/* ============================================================
+   STATIC FILES
+   ============================================================ */
+
+// Uploads (logo, banner dari admin)
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, 'uploads'), {
+    maxAge: '7d',
+    fallthrough: true,
+  })
+);
+
+// Root static (frontend)
+const ROOT_DIR = path.join(__dirname, '..');
+app.use(
+  express.static(ROOT_DIR, {
+    maxAge: isProduction ? '1d' : 0,
+    index: false,
+    fallthrough: true,
+  })
+);
+
+/* ============================================================
+   HEALTH CHECK
+   ============================================================ */
+app.get('/api/health', async (req, res) => {
+  const db = await testConnection();
+  res.json({
+    status: db.ok ? 'OK' : 'DEGRADED',
+    timestamp: new Date().toISOString(),
+    database: db.ok ? 'connected' : 'disconnected',
+    // [SECURITY] Jangan expose pesan error DB ke publik di production
+    ...(db.error && !isProduction ? { dbError: db.error } : {}),
+  });
+});
+
+/* ============================================================
+   API ROUTES
+   ============================================================ */
+app.use(sawerRoutes);
+app.use(adminRoutes);
+
+/* ============================================================
+   PAGE ROUTES
+   ============================================================ */
+function sendPage(res, file) {
+  res.sendFile(file, { root: ROOT_DIR }, (err) => {
+    if (err) {
+      console.error(`❌ sendFile error for ${file}:`, err.code || err.message);
+      if (err.code === 'ENOENT') {
+        res.status(404).send(`File not found: ${file}`);
+      } else {
+        res.status(500).send('Error serving page');
+      }
     }
-    return tags;
-  }
-
-  let tags = parseTags(qris);
-  // 4. Hapus tag 54 jika ada
-  tags = tags.filter((t) => t.tag !== "54");
-
-  // 5. Sisipkan tag 54 setelah tag 53
-  let nominal = String(Number(amount) + Number(fee));
-  let nominalTag = { tag: "54", len: nominal.length, val: nominal };
-  let idx53 = tags.findIndex((t) => t.tag === "53");
-  if (idx53 !== -1) {
-    tags.splice(idx53 + 1, 0, nominalTag);
-  } else {
-    // fallback: setelah tag 52
-    let idx52 = tags.findIndex((t) => t.tag === "52");
-    if (idx52 !== -1) {
-      tags.splice(idx52 + 1, 0, nominalTag);
-    } else {
-      tags.push(nominalTag);
-    }
-  }
-
-  // 6. Gabungkan kembali QRIS
-  let qrisWithAmount =
-    tags
-      .map((t) => t.tag + t.len.toString().padStart(2, "0") + t.val)
-      .join("") + "6304";
-
-  // 7. Hitung CRC dari awal hingga sebelum nilai CRC
-  let crc = calculateCRC(qrisWithAmount);
-  let dynamic = qrisWithAmount + crc;
-  return dynamic;
+  });
 }
 
-app.post("/api/generate", async (req, res) => {
-  const { staticQris, amount, fee } = req.body;
-  if (!staticQris || !amount)
-    return res.status(400).json({ error: "Missing data" });
-  const dynamicQris = generateDynamicQRIS(staticQris, amount, fee || 0);
-  const qrImage = await QRCode.toDataURL(dynamicQris);
-  res.json({ dynamicQris, qrImage });
+app.get('/', (req, res) => sendPage(res, 'index.html'));
+app.get('/index.html', (req, res) => sendPage(res, 'index.html'));
+app.get('/leaderboard', (req, res) => sendPage(res, 'leaderboard.html'));
+app.get('/leaderboard.html', (req, res) => sendPage(res, 'leaderboard.html'));
+app.get('/admin', (req, res) => sendPage(res, 'admin.html'));
+app.get('/admin.html', (req, res) => sendPage(res, 'admin.html'));
+app.get(/^\/admin(\/.*)?$/, (req, res) => sendPage(res, 'admin.html'));
+app.get('/pay', (req, res) => sendPage(res, 'pay.html'));
+app.get('/pay.html', (req, res) => sendPage(res, 'pay.html'));
+app.get('/api-documentation.html', (req, res) => sendPage(res, 'api-documentation.html'));
+app.get('/api-documentation', (req, res) => sendPage(res, 'api-documentation.html'));
+
+
+
+/* ============================================================
+   404 & ERROR HANDLERS
+   ============================================================ */
+
+// API 404
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'API endpoint tidak ditemukan', path: req.path });
 });
 
-// Endpoint: cek kesehatan server
-app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", timestamp: new Date().toISOString() });
-});
-
-// Endpoint: upload gambar QR, decode QRIS
-app.post("/api/parse-image", upload.single("file"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  try {
-    const qris = await decodeQRFromImage(req.file.buffer);
-    res.json({ qris });
-  } catch (e) {
-    console.error("Error decoding QR:", e);
-    res.status(500).json({ error: "Failed to decode QR" });
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'File terlalu besar' });
   }
-});
-
-// Endpoint: parse gambar QR dari URL
-app.post("/api/parse-image-url", async (req, res) => {
-  const { imageUrl } = req.body;
-  if (!imageUrl) return res.status(400).json({ error: "Missing imageUrl" });
-  try {
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error("Failed to fetch image from URL");
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    
-    const qris = await decodeQRFromImage(buffer);
-    res.json({ qris });
-  } catch (e) {
-    console.error("Error decoding QR from URL:", e);
-    res.status(500).json({ error: "Failed to decode QR from URL" });
+  if (err.message === 'CORS not allowed') {
+    return res.status(403).json({ error: 'Origin tidak diizinkan' });
   }
+  res.status(500).json({
+    error: isProduction ? 'Internal server error' : err.message,
+  });
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`QRIS backend running on port ${PORT}`));
+/* ============================================================
+   START SERVER
+   ============================================================ */
+async function start() {
+  console.log('🚀 Starting Sawerdian server...\n');
+
+  // Test database
+  const dbTest = await testConnection();
+  if (!dbTest.ok) {
+    console.error('❌ Database connection failed:', dbTest.error);
+    console.error('   Jalankan: cd backend && npm run migrate');
+    console.error('   Pastikan DATABASE_URL di .env sudah benar.\n');
+    process.exit(1);
+  }
+  console.log('✅ Database connected:', dbTest.time);
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`   • Halaman sawer:  http://localhost:${PORT}/`);
+    console.log(`   • Leaderboard:    http://localhost:${PORT}/leaderboard`);
+    console.log(`   • Admin:          http://localhost:${PORT}/admin`);
+    console.log(`   • API health:     http://localhost:${PORT}/api/health`);
+    console.log(`   • Environment:    ${isProduction ? 'production' : 'development'}`);
+    console.log('');
+  });
+}
+
+start();
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('\n🛑 SIGTERM received. Shutting down...');
+  process.exit(0);
+});
+process.on('SIGINT', () => {
+  console.log('\n🛑 SIGINT received. Shutting down...');
+  process.exit(0);
+});

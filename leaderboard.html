@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top Sawer - DRP Network</title>
+    <meta name="description" content="Lihat top sawer terbaik untuk DRP Network" />
+    <link rel="icon" type="image/png" href="/images/qris.png" />
+
+    <!-- daisyUI 5 + Tailwind CSS v4 via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <div class="navbar bg-base-100/70 backdrop-blur-md sticky top-0 z-30 border-b border-base-300">
+      <div class="flex-1">
+        <a href="/" class="btn btn-ghost">
+          <span aria-hidden="true">←</span>
+          <span class="hidden sm:inline">Kembali</span>
+        </a>
+        <span class="text-lg font-bold ml-2">
+          <span class="gradient-text">🏆 Top Sawer</span>
+        </span>
+      </div>
+      <div class="flex-none gap-1">
+        <a href="/" class="btn btn-primary btn-sm">
+          <span aria-hidden="true">💸</span>
+          <span class="hidden sm:inline">Sawer</span>
+        </a>
+        <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm" aria-label="Toggle tema">
+          <input type="checkbox" id="themeToggle" class="theme-controller" value="dark" />
+          <svg class="swap-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          <svg class="swap-on" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </label>
+      </div>
+    </div>
+
+    <main class="sawer-container">
+      <!-- Hero kecil -->
+      <section class="text-center py-4 animate-fade-in-up">
+        <div class="avatar">
+          <div class="w-20 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+            <img id="creatorAvatar" src="/images/logo_blue.webp" alt="Creator" />
+          </div>
+        </div>
+        <h1 id="creatorName" class="text-xl font-bold mt-2">Memuat...</h1>
+        <p class="text-xs text-base-content/60">Top supporter <span id="creatorName2"></span></p>
+      </section>
+
+      <!-- Stats -->
+      <section class="stats stats-vertical sm:stats-horizontal w-full bg-base-200/60 glass-card my-3 animate-fade-in-up animate-fade-in-up-d1">
+        <div class="stat py-3">
+          <div class="stat-title text-xs">Total Donatur</div>
+          <div class="stat-value text-xl" id="statDonors">-</div>
+        </div>
+        <div class="stat py-3">
+          <div class="stat-title text-xs">Total Nominal</div>
+          <div class="stat-value text-xl text-primary" id="statTotal">-</div>
+        </div>
+        <div class="stat py-3">
+          <div class="stat-title text-xs">Sawer Terbesar</div>
+          <div class="stat-value text-xl text-secondary" id="statMax">-</div>
+        </div>
+      </section>
+
+      <!-- Period Tabs -->
+      <div role="tablist" class="tabs tabs-box bg-base-200 mb-3 animate-fade-in-up animate-fade-in-up-d2">
+        <button role="tab" class="tab" data-period="today">Hari Ini</button>
+        <button role="tab" class="tab" data-period="month">Bulan Ini</button>
+        <button role="tab" class="tab tab-active" data-period="all">Semua</button>
+      </div>
+
+      <!-- Refresh button -->
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-xs text-base-content/50" id="lastUpdate">Memuat...</span>
+        <button id="refreshBtn" class="btn btn-ghost btn-xs">
+          <span aria-hidden="true">🔄</span> Refresh
+        </button>
+      </div>
+
+      <!-- Leaderboard list -->
+      <div id="leaderboardList" class="space-y-2">
+        <!-- Items will be rendered here -->
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="hidden text-center py-12">
+        <div class="text-6xl mb-3">🌱</div>
+        <p class="text-base-content/60">Belum ada sawer di periode ini</p>
+        <p class="text-xs text-base-content/40 mt-1">Jadilah yang pertama!</p>
+        <a href="/" class="btn btn-primary btn-sm mt-4">Sawer Sekarang</a>
+      </div>
+
+      <!-- Loading skeleton -->
+      <div id="loadingState" class="space-y-2">
+        <div class="skeleton h-16 w-full"></div>
+        <div class="skeleton h-16 w-full"></div>
+        <div class="skeleton h-16 w-full"></div>
+      </div>
+
+      <!-- CTA sawer -->
+      <div class="text-center my-6">
+        <a href="/" class="btn btn-primary btn-lg btn-block">
+          💸 Sawer Sekarang
+        </a>
+      </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toastContainer" class="toast toast-top toast-end z-50"></div>
+
+    <!-- Footer -->
+    <footer class="footer footer-center bg-base-200 text-base-content/60 p-4 text-xs">
+      <div>
+        <p id="footerText">© 2026 DRP Network</p>
+      </div>
+    </footer>
+
+    <script src="/assets/js/leaderboard.js"></script>
+  </body>
+</html>

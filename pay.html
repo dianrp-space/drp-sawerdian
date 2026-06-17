@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pembayaran - DRP Network</title>
+    <meta name="description" content="Selesaikan pembayaran sawer via QRIS" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/images/qris.png" />
+
+    <!-- daisyUI 5 + Tailwind CSS v4 via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link rel="stylesheet" href="/assets/css/style.css" />
+
+    <style>
+      /* Disable back button behavior - prevent accidental cancel */
+      .qr-stage { min-height: calc(100vh - 4rem); }
+      .qr-pulse { animation: qrPulse 2.4s ease-in-out infinite; }
+      @keyframes qrPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.35); }
+        50%      { box-shadow: 0 0 0 14px rgba(108, 92, 231, 0); }
+      }
+      .success-pop { animation: successPop 0.6s cubic-bezier(.18,.89,.32,1.28); }
+      @keyframes successPop {
+        0%   { transform: scale(0.5); opacity: 0; }
+        60%  { transform: scale(1.08); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .countdown-num { font-variant-numeric: tabular-nums; }
+    </style>
+  </head>
+  <body class="min-h-screen bg-base-200/40">
+    <!-- Navbar minimal - tampil konsisten tapi TIDAK ada tombol close/back -->
+    <div class="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-30 border-b border-base-300">
+      <div class="flex-1">
+        <span class="text-lg font-bold">
+          <span class="gradient-text">💳 Pembayaran</span>
+        </span>
+      </div>
+      <div class="flex-none gap-1">
+        <span id="pollingBadge" class="badge badge-sm badge-success gap-1 hidden">
+          <span class="inline-block w-2 h-2 rounded-full bg-success-content animate-pulse"></span>
+          <span class="hidden sm:inline">Menunggu</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- State 1: Loading / Error -->
+    <main id="loadingScreen" class="qr-stage flex items-center justify-center p-4">
+      <div class="text-center">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="text-sm text-base-content/60 mt-4" id="loadingMsg">Memuat detail pembayaran...</p>
+        <button id="backToHome" class="btn btn-ghost btn-sm mt-6 hidden">
+          <span aria-hidden="true">←</span> Kembali ke halaman utama
+        </button>
+      </div>
+    </main>
+
+    <!-- State 2: Pending - Tampilkan QR full page -->
+    <main id="payScreen" class="qr-stage hidden flex items-center justify-center p-4">
+      <div class="w-full max-w-md">
+        <div class="card bg-base-100 shadow-2xl">
+          <div class="card-body items-center text-center p-6 sm:p-8">
+            <!-- Header -->
+            <div class="mb-1">
+              <p class="text-sm text-base-content/60">Scan QR untuk membayar</p>
+            </div>
+
+            <!-- Amount -->
+            <div class="text-4xl sm:text-5xl font-bold gradient-text my-1" id="payAmount">Rp 0</div>
+            <p class="text-xs text-base-content/50" id="payDonor"></p>
+
+            <!-- Unique code warning -->
+            <div class="alert alert-warning text-xs py-1 px-2 my-2 w-full" id="payUniqueCodeWrap">
+              <span>
+                ⚠️ Bayar <strong>tepat</strong> (sudah termasuk kode unik <strong>+<span id="payUniqueCodeVal">0</span></strong> agar otomatis terdeteksi)
+              </span>
+            </div>
+
+            <!-- QR Code -->
+            <div class="my-4">
+              <div class="bg-white p-4 rounded-3xl qr-pulse inline-block">
+                <img id="payQrImage" src="" alt="QR Code Pembayaran" class="w-64 h-64 sm:w-72 sm:h-72 block" />
+              </div>
+            </div>
+
+            <!-- Countdown -->
+            <div class="flex items-center justify-center gap-1 text-sm text-base-content/70">
+              <span>QR aktif selama</span>
+              <span class="countdown-num font-mono font-semibold text-primary" id="payCountdown">--:--:--</span>
+            </div>
+
+            <!-- Message (jika ada) -->
+            <div id="payMessageWrap" class="hidden alert alert-info mt-3 w-full text-left">
+              <div>
+                <div class="text-xs font-semibold opacity-70">Pesan:</div>
+                <div id="payMessage" class="text-sm"></div>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="grid grid-cols-2 gap-2 mt-4 w-full">
+              <button id="copyQrBtn" class="btn btn-outline btn-sm">
+                <span aria-hidden="true">📋</span> Copy QR String
+              </button>
+              <a id="downloadQrBtn" class="btn btn-outline btn-sm" download="qris-donation.png">
+                <span aria-hidden="true">⬇</span> Download QR
+              </a>
+            </div>
+
+            <!-- Instructions -->
+            <div class="collapse collapse-arrow bg-base-200 mt-4 w-full text-left">
+              <input type="checkbox" />
+              <div class="collapse-title text-sm font-semibold">Cara bayar</div>
+              <div class="collapse-content text-sm">
+                <ol class="list-decimal list-inside space-y-1 text-base-content/80">
+                  <li>Buka aplikasi e-wallet (GoPay, OVO, DANA, ShopeePay, dll) atau mobile banking</li>
+                  <li>Pilih menu <strong>Scan QR</strong> atau <strong>Bayar</strong></li>
+                  <li>Arahkan kamera ke QR code di atas</li>
+                  <li>Pastikan nominal sudah sesuai, lalu konfirmasi</li>
+                  <li>Halaman ini akan otomatis pindah ke leaderboard setelah pembayaran sukses 🎉</li>
+                </ol>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-base-content/50 mt-3">
+              💡 Jangan tutup halaman ini sampai pembayaran terkonfirmasi
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- State 3: Success - Pembayaran terkonfirmasi -->
+    <main id="successScreen" class="qr-stage hidden flex items-center justify-center p-4">
+      <div class="text-center success-pop">
+        <div class="text-7xl mb-4">✅</div>
+        <h2 class="text-2xl sm:text-3xl font-bold mb-2">Pembayaran Berhasil!</h2>
+        <p class="text-base-content/70 mb-1">Terima kasih atas dukungannya 🎉</p>
+        <p class="text-sm text-base-content/50 mb-6">
+          Mengalihkan ke leaderboard dalam <span id="redirectCountdown" class="font-bold text-primary">3</span> detik...
+        </p>
+        <a href="/leaderboard" class="btn btn-primary">
+          <span aria-hidden="true">🏆</span> Lihat Leaderboard Sekarang
+        </a>
+      </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toastContainer" class="toast toast-top toast-end z-50"></div>
+
+    <script src="/assets/js/pay.js"></script>
+  </body>
+</html>

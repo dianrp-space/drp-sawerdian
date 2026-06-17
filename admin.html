@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Sawerdian</title>
+    <meta name="description" content="Dashboard admin untuk website sawer DRP Network" />
+    <link rel="icon" type="image/png" href="/images/qris.png" />
+
+    <!-- daisyUI 5 + Tailwind CSS v4 via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link rel="stylesheet" href="/assets/css/style.css" />
+  </head>
+  <body>
+    <!-- ====================== LOGIN SCREEN ====================== -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+      <div class="card bg-base-100 shadow-2xl w-full max-w-md">
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <div class="text-5xl mb-2">🔐</div>
+            <h1 class="text-2xl font-bold gradient-text">Sawerdian Admin</h1>
+            <p class="text-sm text-base-content/60">Login untuk mengelola website sawer</p>
+          </div>
+
+          <form id="loginForm" class="space-y-3">
+            <label class="floating-label">
+              <span>Username</span>
+              <input
+                type="text"
+                id="loginUsername"
+                class="input input-bordered w-full"
+                placeholder="admin"
+                required
+                autocomplete="username"
+              />
+            </label>
+            <label class="floating-label">
+              <span>Password</span>
+              <input
+                type="password"
+                id="loginPassword"
+                class="input input-bordered w-full"
+                placeholder="••••••••"
+                required
+                autocomplete="current-password"
+              />
+            </label>
+
+            <div id="loginError" class="alert alert-error hidden text-sm py-2"></div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+              <span class="loading loading-spinner loading-sm hidden" id="loginLoading"></span>
+              <span id="loginBtnText">Login</span>
+            </button>
+          </form>
+
+          <p class="text-xs text-center text-base-content/40 mt-4">
+            Default: admin / admin123 (ganti setelah login pertama!)
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================== DASHBOARD ====================== -->
+    <div id="dashboardScreen" class="hidden">
+      <div class="drawer lg:drawer-open">
+        <input id="dash-drawer" type="checkbox" class="drawer-toggle" />
+
+        <!-- Main content -->
+        <div class="drawer-content flex flex-col min-h-screen bg-base-200/50">
+          <!-- Top navbar -->
+          <div class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-20">
+            <div class="flex-none lg:hidden">
+              <label for="dash-drawer" class="btn btn-ghost btn-square" aria-label="Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </label>
+            </div>
+            <div class="flex-1">
+              <h1 class="text-lg font-bold ml-2">
+                <span class="gradient-text">Sawerdian</span>
+                <span class="text-base-content/50 text-sm font-normal">/ Admin</span>
+              </h1>
+            </div>
+            <div class="flex-none gap-2">
+              <a href="/" target="_blank" class="btn btn-ghost btn-sm">
+                <span aria-hidden="true">🌐</span>
+                <span class="hidden sm:inline">Lihat Web</span>
+              </a>
+              <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+                  <span aria-hidden="true">👤</span>
+                  <span id="adminUsername">admin</span>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-44 p-2 shadow">
+                  <li><a id="logoutBtn">🚪 Logout</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page content -->
+          <main class="p-4 sm:p-6 flex-1">
+            <div id="tabContent">
+              <div class="flex items-center justify-center py-20">
+                <span class="loading loading-spinner loading-lg"></span>
+              </div>
+            </div>
+          </main>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="drawer-side z-30">
+          <label for="dash-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+          <aside class="bg-base-100 min-h-full w-64 border-r border-base-300">
+            <div class="p-4 border-b border-base-300">
+              <div class="flex items-center gap-2">
+                <div class="avatar">
+                  <div class="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-1">
+                    <img id="sidebarAvatar" src="/images/logo_blue.webp" alt="logo" />
+                  </div>
+                </div>
+                <div>
+                  <p class="font-bold text-sm" id="sidebarCreatorName">DRP Network</p>
+                  <p class="text-xs text-base-content/50">Admin Panel</p>
+                </div>
+              </div>
+            </div>
+            <ul class="menu p-2 w-full text-sm" id="sidebarMenu">
+              <li><a data-tab="overview" class="active"><span>📊</span> Overview</a></li>
+              <li><a data-tab="donations"><span>💰</span> Donations</a></li>
+              <li><a data-tab="branding"><span>🎨</span> Branding</a></li>
+              <li><a data-tab="identity"><span>👤</span> Identity</a></li>
+              <li><a data-tab="socials"><span>🔗</span> Social Links</a></li>
+              <li><a data-tab="webhooks"><span>🔔</span> Webhooks</a></li>
+              <li><a data-tab="settings"><span>⚙️</span> Settings</a></li>
+              <li class="mt-2 border-t border-base-300 pt-2">
+                <a href="/api-documentation" target="_blank"><span>📖</span> API Docs</a>
+              </li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal container (populated by JS) -->
+    <dialog id="modal" class="modal"></dialog>
+
+    <!-- Toast -->
+    <div id="toastContainer" class="toast toast-top toast-end z-50"></div>
+
+    <script src="/assets/js/admin.js"></script>
+  </body>
+</html>

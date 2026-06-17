@@ -1,73 +1,146 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DRP Network Solutions - Generator QRIS Dinamis</title>
-    <link rel="icon" type="image/png" href="images/qris.png" />
-    <link rel="stylesheet" href="style.css" />
+    <title>Sawer - DRP Network</title>
+    <meta name="description" content="Dukung kreator favoritmu dengan sawer via QRIS" />
+    <link rel="icon" type="image/png" href="/images/qris.png" />
+
+    <!-- daisyUI 5 + Tailwind CSS v4 via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link rel="stylesheet" href="/assets/css/style.css" />
   </head>
   <body>
-    <header class="header">
-      <div class="header-inner">
-        <img src="images/logo_blue.webp" alt="Logo" class="logo" />
-        <span class="site-title"
-          >DRP Network Solutions - Generator QRIS Dinamis</span
-        >
+    <!-- Navbar -->
+    <div class="navbar bg-base-100/70 backdrop-blur-md sticky top-0 z-30 border-b border-base-300">
+      <div class="flex-1">
+        <a href="/" class="btn btn-ghost text-lg font-bold">
+          <span class="gradient-text">SawerDian</span>
+        </a>
       </div>
-    </header>
-    <div class="container">
-      <h1>Generator QRIS Dinamis</h1>
-      <div class="input-section">
-        <label>Tempel Kode QRIS Statis Anda Di Sini:</label>
-        <textarea
-          id="staticQris"
-          rows="4"
-          placeholder="Tempel kode QRIS statis di sini..."
-        ></textarea>
-        <label>Atau Unggah Gambar QRIS Di Sini:</label>
-        <input type="file" id="qrImageInput" accept="image/*" />
-        <label>Atau Pindai dari URL Gambar:</label>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-          <input type="url" id="qrImageUrl" placeholder="https://contoh.com/qr.jpg" style="flex: 1;" />
-          <button id="parseUrlBtn" type="button" style="margin: 0; padding: 10px 15px; width: auto;">Pindai URL</button>
-        </div>
-        <img
-          id="qrPreview"
-          style="
-            display: none;
-            max-width: 120px;
-            margin: 10px 0;
-            border-radius: 8px;
-          "
-        />
-        <button id="parseBtn" type="button">Pindai QRIS dari Gambar</button>
-        <label>Masukkan Nominal Di Sini:</label>
-        <input
-          type="number"
-          id="amount"
-          min="0"
-          value="2000"          
-        />
-      </div>
-      <div class="result-section" style="display: none">
-        <h2>Hasil QRIS Dinamis Beserta Nominal</h2>
-        <img id="qrImage" src="" alt="Kode QR QRIS" style="width: 200px" />
-        <textarea id="dynamicQris" rows="4" readonly></textarea>
-        <button id="copyBtn">Salin Kode QRIS</button>
-        <a id="downloadBtn" href="#" download="qris.png">Unduh QRIS</a>
+      <div class="flex-none gap-1">
+        <a href="/leaderboard" class="btn btn-ghost btn-sm">
+          <span aria-hidden="true">🏆</span>
+          <span class="hidden sm:inline">Top Sawer</span>
+        </a>
+        <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm" aria-label="Toggle tema">
+          <input type="checkbox" id="themeToggle" class="theme-controller" value="dark" />
+          <svg class="swap-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          <svg class="swap-on" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </label>
       </div>
     </div>
-    <footer class="footer">
-      <div class="footer-inner">
-        <img src="images/logo_blue.webp" alt="Logo Footer" />
-        <span>&copy; 2026 DRP Network Solutions</span>
-        <span style="margin: 0 10px;">|</span>
-        <a href="api-documentation.html" style="color: #6cf; text-decoration: none;">Dokumentasi API</a>
-        <span style="margin: 0 10px;">|</span>
-        <a href="https://dianrp.com" style="color: #6cf; text-decoration: none;">Owner</a>
+
+    <main class="sawer-container">
+      <!-- BANNER (optional) -->
+      <div id="bannerWrap" class="hidden mt-4 animate-fade-in-up">
+        <img id="creatorBanner" class="w-full h-32 sm:h-40 object-cover rounded-2xl shadow" alt="Banner" />
+      </div>
+
+      <!-- HERO -->
+      <section class="text-center py-6 animate-fade-in-up">
+
+        <div class="avatar animate-float">
+          <div class="w-28 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+            <img id="creatorAvatar" src="/images/logo_blue.webp" alt="Creator avatar" />
+          </div>
+        </div>
+        <h1 id="creatorName" class="text-3xl font-bold mt-4">Memuat...</h1>
+        <p id="creatorTagline" class="text-base-content/70 mt-2 max-w-md mx-auto">Memuat...</p>
+
+        <!-- Social links -->
+        <div id="socialLinks" class="flex flex-wrap justify-center gap-2 mt-4"></div>
+      </section>
+
+      <!-- STATS RINGKAS -->
+      <section class="stats stats-vertical sm:stats-horizontal w-full bg-base-200/60 glass-card animate-fade-in-up animate-fade-in-up-d1 my-4">
+        <div class="stat py-3">
+          <div class="stat-title text-xs">Total Sawer</div>
+          <div class="stat-value text-2xl" id="statTotal">-</div>
+        </div>
+        <div class="stat py-3">
+          <div class="stat-title text-xs">Bulan Ini</div>
+          <div class="stat-value text-2xl text-primary" id="statMonth">-</div>
+        </div>
+      </section>
+
+      <!-- CARD PILIH NOMINAL -->
+      <section class="card bg-base-100 shadow-xl animate-fade-in-up animate-fade-in-up-d2">
+        <div class="card-body">
+          <h2 class="card-title text-lg flex items-center gap-2">
+            <span aria-hidden="true">💸</span> Pilih Nominal
+          </h2>
+
+          <div id="presetGrid" class="grid grid-cols-3 gap-2 mt-2">
+            <!-- Preset buttons will be inserted here -->
+          </div>
+
+          <div class="divider text-xs text-base-content/50 my-2">atau</div>
+
+          <!-- Custom amount + name + message -->
+          <div class="space-y-3">
+            <label class="floating-label">
+              <span>Nominal custom (Rp)</span>
+              <input
+                type="number"
+                id="customAmount"
+                class="input input-bordered w-full"
+                placeholder="2000"
+                min="2000"
+                max="500000"
+              />
+            </label>
+
+            <label class="floating-label" id="donorNameWrap">
+              <span>Nama (opsional, akan di-mask di leaderboard)</span>
+              <input
+                type="text"
+                id="donorName"
+                class="input input-bordered w-full"
+                placeholder="Anonim"
+                maxlength="100"
+              />
+            </label>
+
+            <label class="floating-label" id="messageWrap">
+              <span>Pesan / dukungan (opsional)</span>
+              <textarea
+                id="message"
+                class="textarea textarea-bordered w-full"
+                placeholder="Semangat terus! 🚀"
+                maxlength="500"
+                rows="2"
+              ></textarea>
+            </label>
+          </div>
+
+          <button id="sawerBtn" class="btn btn-primary btn-lg btn-block mt-4" disabled>
+            <span class="loading loading-spinner loading-sm hidden" id="btnLoading"></span>
+            <span id="btnText">Pilih nominal dulu</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Info -->
+      <p class="text-center text-xs text-base-content/50 my-4 animate-fade-in-up animate-fade-in-up-d3">
+        Pembayaran via QRIS • Didukung oleh semua e-wallet & mobile banking
+      </p>
+    </main>
+
+    <!-- Toast notifications -->
+    <div id="toastContainer" class="toast toast-top toast-end z-50"></div>
+
+    <!-- Footer -->
+    <footer class="footer footer-center bg-base-200 text-base-content/60 p-4 text-xs mt-6">
+      <div>
+        <p id="footerText">© 2026 Dian Rama Putra. All rights reserved.</p>
+        <p class="opacity-60">Made with ❤️ by DRP</p>
       </div>
     </footer>
-    <script src="script.js"></script>
+
+    <script src="/assets/js/sawer.js"></script>
   </body>
 </html>

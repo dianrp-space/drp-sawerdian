@@ -1,172 +1,710 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dokumentasi API - DRP Network Solutions</title>
-    <link rel="icon" type="image/png" href="images/qris.png" />
-    <link rel="stylesheet" href="style.css" />
+    <title>Dokumentasi API - Sawerdian</title>
+    <meta name="description" content="Dokumentasi lengkap API Sawerdian" />
+    <link rel="icon" type="image/png" href="/images/qris.png" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/assets/css/style.css" />
     <style>
-      .doc-content {
-        text-align: left;
-        line-height: 1.6;
-      }
-      .doc-content h2, .doc-content h3 {
-        color: #2c3e50;
-        margin-top: 20px;
-        margin-bottom: 10px;
-      }
-      .doc-content pre {
-        background: #f4f4f4;
-        padding: 15px;
-        border-radius: 5px;
-        overflow-x: auto;
-        border: 1px solid #ddd;
-        margin-bottom: 20px;
-      }
-      .doc-content code {
-        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-        font-size: 14px;
-      }
-      .doc-content ul {
-        margin-left: 20px;
-        margin-bottom: 20px;
-      }
       .endpoint-block {
-        background: #181f3a; /* Samakan dengan warna box di index */
         padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 16px #0004;
-        margin-bottom: 30px;
-        color: #fff; 
-      }
-      .endpoint-block h2, .endpoint-block h3 {
-        color: #6cf; /* Warna aksen biru terang sama dengan title di index */
-      }
-      .endpoint-block p, .endpoint-block ul {
-        color: #d0d4e0; /* Warna abu terang untuk teks agar kontras dengan background gelap */
-      }
-      .endpoint-block pre {
-        background: #232b4a; /* Warna input field dari index */
-        color: #6cf; /* Warna teks code */
-        border: 1px solid #3a4773;
-      }
-      .endpoint-block code {
-        color: #9cf; 
-      }
-      .endpoint-block pre code {
-        color: #fff; 
+        border-radius: 12px;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
       }
       .method-badge {
         display: inline-block;
-        padding: 3px 8px;
-        border-radius: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
         font-weight: bold;
-        font-size: 14px;
-        margin-right: 10px;
+        font-size: 13px;
+        margin-right: 8px;
+        font-family: monospace;
       }
-      .get { background: #61affe; color: white; }
-      .post { background: #49cc90; color: white; }
+      .get    { background: #61affe; color: white; }
+      .post   { background: #49cc90; color: white; }
+      .put    { background: #fca130; color: white; }
+      .patch  { background: #50e3c2; color: white; }
+      .delete { background: #f93e3e; color: white; }
+      pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 14px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 13px;
+        margin: 8px 0;
+      }
+      pre code { color: #d4d4d4; }
+      h2 code, h3 code { font-size: 0.9em; }
+      .section-title { color: var(--color-primary); }
     </style>
   </head>
   <body>
-    <header class="header">
-      <div class="header-inner">
-        <img src="images/logo_blue.webp" alt="Logo" class="logo" />
-        <span class="site-title">DRP Network Solutions - Dokumentasi API</span>
+    <div class="navbar bg-base-100 border-b border-base-300 sticky top-0 z-30">
+      <div class="flex-1">
+        <a href="/" class="btn btn-ghost text-lg font-bold">
+          <span class="gradient-text">Sawerdian</span>
+        </a>
       </div>
-    </header>
-    
-    <div class="container doc-content" style="max-width: 800px;">
-      <div style="margin-bottom: 20px;">
-        <a href="index.html" style="text-decoration: none; color: #007bff;">&larr; Kembali ke Generator</a>
+      <div class="flex-none">
+        <a href="/" class="btn btn-ghost btn-sm">&#8592; Beranda</a>
+        <a href="/admin" class="btn btn-primary btn-sm">Admin</a>
       </div>
-      
-      <h1>API Generator QRIS Dinamis</h1>
-      <p>API ini memungkinkan Anda untuk membuat kode QRIS dinamis secara terprogram, memindai string QRIS dari gambar, dan memeriksa status server. URL dasar untuk semua permintaan API adalah domain root server Anda, atau <code>http://localhost:3001</code> jika dijalankan secara lokal.</p>
-
-      <div class="endpoint-block">
-        <h2><span class="method-badge get">GET</span> /api/health</h2>
-        <p>Memeriksa status kesehatan server API.</p>
-        
-        <h3>Respons</h3>
-        <pre><code>{
-  "status": "OK",
-  "timestamp": "2026-06-14T21:00:00.000Z"
-}</code></pre>
-      </div>
-
-      <div class="endpoint-block">
-        <h2><span class="method-badge post">POST</span> /api/generate</h2>
-        <p>Menghasilkan string QRIS dinamis dan gambar kode QR dengan menyuntikkan nominal ke dalam string QRIS statis.</p>
-        
-        <h3>Header Permintaan</h3>
-        <ul>
-          <li><code>Content-Type: application/json</code></li>
-        </ul>
-
-        <h3>Isi Permintaan</h3>
-        <pre><code>{
-  "staticQris": "000201010211...", // Wajib: String QRIS statis
-  "amount": 10000,               // Wajib: Nominal transaksi (angka)
-}</code></pre>
-
-        <h3>Respons</h3>
-        <pre><code>{
-  "dynamicQris": "000201010212...", // String QRIS dinamis yang dihasilkan
-  "qrImage": "data:image/png;base64,iVBORw0K..." // Gambar PNG yang dienkode Base64
-}</code></pre>
-      </div>
-
-      <div class="endpoint-block">
-        <h2><span class="method-badge post">POST</span> /api/parse-image</h2>
-        <p>Mengekstrak string QRIS dari unggahan gambar kode QR.</p>
-        
-        <h3>Header Permintaan</h3>
-        <ul>
-          <li><code>Content-Type: multipart/form-data</code></li>
-        </ul>
-
-        <h3>Isi Permintaan</h3>
-        <p>Kirim data form (form-data) dengan satu bidang bernama <code>file</code> yang berisi file gambar (JPG, PNG, dll.).</p>
-
-        <h3>Respons</h3>
-        <pre><code>{
-  "qris": "000201010211..." // String QRIS hasil pindaian
-}</code></pre>
-      </div>
-
-      <div class="endpoint-block">
-        <h2><span class="method-badge post">POST</span> /api/parse-image-url</h2>
-        <p>Mengekstrak string QRIS dari gambar yang dihosting di URL yang diberikan.</p>
-        
-        <h3>Header Permintaan</h3>
-        <ul>
-          <li><code>Content-Type: application/json</code></li>
-        </ul>
-
-        <h3>Isi Permintaan</h3>
-        <pre><code>{
-  "imageUrl": "https://contoh.com/path/ke/qr-image.jpg" // Wajib: URL dari gambar QR
-}</code></pre>
-
-        <h3>Respons</h3>
-        <pre><code>{
-  "qris": "000201010211..." // String QRIS hasil pindaian
-}</code></pre>
-      </div>
-
     </div>
 
-    <footer class="footer">
-      <div class="footer-inner">
-        <img src="images/logo_blue.webp" alt="Logo Footer" />
-        <span>&copy; 2026 DRP Network Solutions</span>
-        <span style="margin: 0 10px;">|</span>
-        <a href="index.html" style="color: #6cf; text-decoration: none;">Generator QRIS</a>
-        <span style="margin: 0 10px;">|</span>
-        <a href="https://dianrp.com" style="color: #6cf; text-decoration: none;">Owner</a>
+    <main class="max-w-4xl mx-auto p-4 sm:p-6">
+      <div class="mb-6">
+        <h1 class="text-3xl font-bold gradient-text">&#128218; Dokumentasi API</h1>
+        <p class="text-base-content/60 mt-1">Dokumentasi lengkap untuk semua endpoint Sawerdian.</p>
+        <p class="text-sm mt-2">Base URL: <code class="bg-base-200 px-2 py-1 rounded">http://localhost:3003</code> (atau domain kamu saat deploy)</p>
       </div>
-    </footer>
+
+      <div class="alert alert-info mb-4">
+        <span>&#128737;&#65039; <strong>Auth</strong>: Endpoint admin butuh session cookie. Login dulu ke <code>/api/admin/login</code> untuk dapat cookie. Endpoint Macrodroid butuh <strong>Basic Auth</strong>.</span>
+      </div>
+
+      <!-- TOC -->
+      <div class="bg-base-200 rounded-xl p-4 mb-8">
+        <p class="font-bold mb-2">&#128203; Daftar Isi</p>
+        <ul class="text-sm space-y-1 list-disc list-inside">
+          <li><a href="#public" class="link">Endpoint Publik</a> &mdash; health, config, donations, leaderboard</li>
+          <li><a href="#macrodroid" class="link">Macrodroid Auto-Confirm</a> &mdash; confirm, test</li>
+          <li><a href="#auth" class="link">Admin Auth</a> &mdash; login, logout, me</li>
+          <li><a href="#dashboard" class="link">Admin Dashboard</a></li>
+          <li><a href="#settings" class="link">Admin Settings</a></li>
+          <li><a href="#branding" class="link">Branding</a> &mdash; upload logo/banner</li>
+          <li><a href="#webhooks" class="link">Webhooks</a></li>
+          <li><a href="#socials" class="link">Social Links</a></li>
+          <li><a href="#donations-admin" class="link">Admin Donations</a></li>
+          <li><a href="#qris" class="link">QRIS Preview</a></li>
+        </ul>
+      </div>
+
+      <!-- ==================== PUBLIC ==================== -->
+      <h2 id="public" class="text-2xl font-bold mt-8 mb-3 section-title">&#127956; Endpoint Publik</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/health</code></h3>
+        <p class="text-sm">Cek status server dan koneksi database.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "status": "OK",
+  "timestamp": "2026-06-17T08:00:00.000Z",
+  "database": "connected"
+}</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/config</code></h3>
+        <p class="text-sm">Ambil konfigurasi publik: identitas kreator, branding, preset nominal, social links.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "creator": {
+    "name": "DRP Network",
+    "tagline": "Terima kasih sudah mendukung!",
+    "website": "https://dianrp.com",
+    "avatar": "/images/logo_blue.webp",
+    "banner": "",
+    "primaryColor": "#6c5ce7"
+  },
+  "donation": {
+    "presets": [5000, 10000, 20000, 50000, 100000],
+    "minAmount": 2000,
+    "maxAmount": 5000000,
+    "customEnabled": true,
+    "donorNameEnabled": true,
+    "messageEnabled": true,
+    "qrExpiryHours": 24
+  },
+  "socials": [
+    { "platform": "instagram", "label": "Instagram", "url": "https://...", "icon": "instagram" }
+  ],
+  "footer": "© 2026 DRP Network"
+}</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/donations</code></h3>
+        <p class="text-sm">Buat donasi baru. Generate QRIS dinamis dengan nominal = <code>amount + unique_code</code>. Disimpan ke database dengan status <code>pending</code>.</p>
+        <div class="alert alert-warning mt-2 text-xs p-2">
+          Rate limit: 10 request per 5 menit per IP.
+        </div>
+        <h4 class="font-semibold text-sm mt-3">Body (JSON)</h4>
+        <pre><code>{
+  "amount": 10000,           // Wajib, integer. Min: min_amount, Max: max_amount - 200
+  "donorName": "John Doe",   // Opsional, max 100 karakter
+  "message": "Semangat!"     // Opsional, max 500 karakter
+}</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response 200</h4>
+        <pre><code>{
+  "ok": true,
+  "donationId": 1,
+  "qrToken": "abc123def456...",
+  "baseAmount": 10000,
+  "baseAmountFormatted": "Rp 10.000",
+  "uniqueCode": 23,
+  "amount": 10023,
+  "amountFormatted": "Rp 10.023",
+  "qrImage": "data:image/png;base64,...",
+  "dynamicQris": "00020101021226...",
+  "expiresAt": "2026-06-18T08:00:00.000Z",
+  "message": "Bayar tepat Rp 10.023 agar donasi terdeteksi otomatis."
+}</code></pre>
+        <p class="text-xs text-base-content/60 mt-2">&#128161; <strong>uniqueCode</strong> adalah angka acak 1&ndash;200 yang ditambahkan ke nominal agar setiap transaksi unik dan bisa dideteksi otomatis via notifikasi e-wallet.</p>
+        <h4 class="font-semibold text-sm mt-3">Error</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>400</code> &mdash; Nominal tidak valid / di luar batas min&ndash;max</li>
+          <li><code>429</code> &mdash; Rate limit (10 req / 5 menit)</li>
+          <li><code>500</code> &mdash; QRIS static belum dikonfigurasi di admin settings</li>
+        </ul>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/donations/:token</code></h3>
+        <p class="text-sm">Cek status donasi by token (polling setelah user scan QR).</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "id": 1,
+  "baseAmount": 10000,
+  "uniqueCode": 23,
+  "amount": 10023,
+  "amountFormatted": "Rp 10.023",
+  "donorName": "John Doe",
+  "message": "Semangat!",
+  "status": "pending",
+  "createdAt": "2026-06-17T08:00:00.000Z",
+  "paidAt": null
+}</code></pre>
+        <p class="text-xs text-base-content/60 mt-1">status: <code>pending</code> | <code>paid</code> | <code>expired</code> | <code>cancelled</code></p>
+        <h4 class="font-semibold text-sm mt-3">Error</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>404</code> &mdash; Token tidak ditemukan</li>
+        </ul>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/donations/:token/paid</code> &#128274;</h3>
+        <p class="text-sm">Konfirmasi donasi secara manual by token. Dilindungi <strong>WEBHOOK_SECRET</strong>. Set status ke <code>paid</code> dan trigger webhook notifikasi.</p>
+        <div class="alert alert-warning mt-2 text-xs p-2">
+          Secret wajib dikirim via header atau body &mdash; bukan query string (query string muncul di access log).
+        </div>
+        <h4 class="font-semibold text-sm mt-3">Header (direkomendasikan)</h4>
+        <pre><code>X-Webhook-Secret: YOUR_WEBHOOK_SECRET</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Atau via Body JSON</h4>
+        <pre><code>{ "secret": "YOUR_WEBHOOK_SECRET" }</code></pre>
+        <h4 class="font-semibold text-sm mt-3">cURL</h4>
+        <pre><code>curl -X POST "http://localhost:3003/api/donations/abc123/paid" \
+  -H "X-Webhook-Secret: YOUR_WEBHOOK_SECRET"</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true, "message": "Donasi dikonfirmasi", "donation": { ... } }</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Error</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>401</code> &mdash; Secret salah atau tidak ada</li>
+          <li><code>404</code> &mdash; Token tidak ditemukan</li>
+          <li><code>500</code> &mdash; WEBHOOK_SECRET belum diset di server</li>
+        </ul>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/leaderboard</code></h3>
+        <p class="text-sm">List top sawer. Nama di-mask untuk privasi. Hanya donasi berstatus <code>paid</code> yang muncul.</p>
+        <h4 class="font-semibold text-sm mt-3">Query Params</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>period</code> &mdash; <code>today</code> | <code>month</code> | <code>all</code> (default: <code>all</code>)</li>
+          <li><code>limit</code> &mdash; 1&ndash;200 (default: <code>50</code>)</li>
+        </ul>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "period": "month",
+  "count": 10,
+  "items": [
+    {
+      "rank": 1,
+      "baseAmount": 50000,
+      "uniqueCode": 77,
+      "amount": 50077,
+      "amountFormatted": "Rp 50.077",
+      "donorName": "A****m",
+      "message": "Semangat!",
+      "paidAt": "2026-06-17T08:00:00.000Z"
+    }
+  ]
+}</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/leaderboard/stats</code></h3>
+        <p class="text-sm">Ringkasan statistik sawer: semua waktu, hari ini, dan bulan ini.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "all": {
+    "count": 100,
+    "total": 5000000,
+    "totalFormatted": "Rp 5.000.000",
+    "maxAmount": 1000000,
+    "maxAmountFormatted": "Rp 1.000.000"
+  },
+  "today": { "count": 5,  "total": 50000,   "totalFormatted": "Rp 50.000"    },
+  "month": { "count": 50, "total": 2500000, "totalFormatted": "Rp 2.500.000" }
+}</code></pre>
+      </div>
+
+      <!-- ==================== MACRODROID ==================== -->
+      <h2 id="macrodroid" class="text-2xl font-bold mt-10 mb-3 section-title">&#129302; Macrodroid Auto-Confirm</h2>
+
+      <div class="alert alert-info mb-4 text-sm">
+        <div>
+          <p>Macrodroid menangkap notifikasi e-wallet (GoPay, DANA, OVO, dll.) dan POST ke endpoint ini. Backend parse nominal "Rp X.XXX" dari teks notifikasi &rarr; cocokkan ke donasi pending &rarr; mark <code>paid</code>.</p>
+          <p class="mt-1"><strong>Auth</strong>: Basic Auth. Set <code>MACRODROID_USERNAME</code> dan <code>MACRODROID_PASSWORD</code> di <code>.env</code>. Header: <code>Authorization: Basic base64(user:pass)</code></p>
+        </div>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/macrodroid/confirm</code> &#128274; Basic Auth</h3>
+        <p class="text-sm">Terima notifikasi e-wallet dari Macrodroid. Parse nominal dari teks notifikasi &rarr; cari donasi pending yang cocok (dibuat < 2 jam lalu) &rarr; mark paid &rarr; trigger webhook.</p>
+        <div class="alert alert-warning mt-2 text-xs p-2">Rate limit: 30 request per menit.</div>
+
+        <h4 class="font-semibold text-sm mt-3">Cara kirim data (salah satu atau kombinasi)</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><strong>JSON body</strong> (direkomendasikan) &mdash; <code>Content-Type: application/json</code></li>
+          <li><strong>URL query string</strong> &mdash; parameter di-append ke URL</li>
+          <li><strong>Form-urlencoded</strong> &mdash; <code>Content-Type: application/x-www-form-urlencoded</code></li>
+        </ul>
+
+        <h4 class="font-semibold text-sm mt-3">Body JSON (format direkomendasikan)</h4>
+        <pre><code>{
+  "query": {
+    "notif_text":  "Kamu telah menerima pembayaran Rp 10.023 dari xxx atas nama DIANXXXX.",
+    "notif_app":   "com.dana",
+    "notif_title": "Payment received",
+    "status":      "paid",
+    "timestamp":   1756476503893
+  }
+}</code></pre>
+
+        <h4 class="font-semibold text-sm mt-3">Field yang diterima</h4>
+        <div class="overflow-x-auto">
+          <table class="table table-xs w-full text-sm">
+            <thead>
+              <tr><th>Field</th><th>Alias</th><th>Keterangan</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>notif_text</code></td>
+                <td><code>notifText</code>, <code>text</code>, <code>message</code>, <code>body</code>, <code>content</code></td>
+                <td>Teks notifikasi e-wallet. Wajib mengandung pola <code>Rp X.XXX</code> atau <code>IDR X.XXX</code></td>
+              </tr>
+              <tr>
+                <td><code>notif_app</code></td>
+                <td><code>notifApp</code>, <code>app</code>, <code>app_name</code>, <code>packageName</code></td>
+                <td>Package name app, e.g. <code>com.dana</code>, <code>com.gojek.app</code></td>
+              </tr>
+              <tr>
+                <td><code>notif_title</code></td>
+                <td><code>notifTitle</code>, <code>title</code></td>
+                <td>Judul notifikasi (opsional)</td>
+              </tr>
+              <tr>
+                <td><code>status</code></td>
+                <td><code>notification_status</code></td>
+                <td>Jika diisi dan bukan <code>paid</code> / <code>received</code> / <code>success</code>, request diabaikan</td>
+              </tr>
+              <tr>
+                <td><code>timestamp</code></td>
+                <td><code>time</code></td>
+                <td>Unix ms timestamp (opsional)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 class="font-semibold text-sm mt-3">cURL</h4>
+        <pre><code>curl -X POST "http://localhost:3003/api/macrodroid/confirm" \
+  -H "Authorization: Basic $(echo -n 'macrodroid:PASSWORD' | base64)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "notif_text": "Kamu telah menerima pembayaran Rp 10.023 dari xxx.",
+      "notif_app":  "com.dana",
+      "status":     "paid"
+    }
+  }'</code></pre>
+
+        <h4 class="font-semibold text-sm mt-3">Response sukses</h4>
+        <pre><code>{
+  "ok": true,
+  "message": "Donasi dikonfirmasi via Macrodroid",
+  "donation": {
+    "id": 1,
+    "baseAmount": 10000,
+    "baseAmountFormatted": "Rp 10.000",
+    "uniqueCode": 23,
+    "amount": 10023,
+    "amountFormatted": "Rp 10.023",
+    "donorName": "John Doe",
+    "message": "Semangat!",
+    "status": "paid",
+    "paidAt": "2026-06-17T08:05:00.000Z",
+    "paidVia": "macrodroid",
+    "paidViaApp": "com.dana",
+    "matchedFrom": "Kamu telah menerima pembayaran Rp 10.023 dari xxx."
+  }
+}</code></pre>
+
+        <h4 class="font-semibold text-sm mt-3">Error</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>400</code> &mdash; Gagal parse nominal dari <code>notif_text</code> (hint disertakan di response)</li>
+          <li><code>401</code> &mdash; Basic Auth salah atau tidak ada</li>
+          <li><code>404</code> &mdash; Tidak ada donasi pending dengan nominal tersebut, atau sudah lebih dari 2 jam</li>
+          <li><code>429</code> &mdash; Rate limit (30 req / menit)</li>
+        </ul>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/macrodroid/test</code> &#128274; Basic Auth</h3>
+        <p class="text-sm">Test koneksi Macrodroid. Mengembalikan contoh URL, headers, dan body yang harus dikonfigurasi di Macrodroid HTTP Request action.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "ok": true,
+  "serverTime": "2026-06-17T08:00:00.000Z",
+  "endpoint": "POST /api/macrodroid/confirm",
+  "auth": "Basic Auth",
+  "example": {
+    "url": "http://localhost:3003/api/macrodroid/confirm",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Basic bWFjcm9kcm9pZDpQQVNTV09SRA=="
+    },
+    "body": {
+      "query": {
+        "notif_text":  "Kamu telah menerima pembayaran Rp 5.023 dari xxx atas nama DIANXXXX.",
+        "notif_app":   "com.dana",
+        "notif_title": "Payment received",
+        "status":      "paid",
+        "timestamp":   1756476503893
+      }
+    }
+  }
+}</code></pre>
+      </div>
+
+      <!-- ==================== ADMIN AUTH ==================== -->
+      <h2 id="auth" class="text-2xl font-bold mt-10 mb-3 section-title">&#128274; Admin Auth</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/login</code></h3>
+        <p class="text-sm">Login admin. Set session cookie <code>drp.sid</code>. Default: <code>admin</code> / <code>admin123</code> &mdash; <strong>wajib diganti</strong> setelah setup pertama.</p>
+        <h4 class="font-semibold text-sm mt-3">Body</h4>
+        <pre><code>{ "username": "admin", "password": "admin123" }</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true, "username": "admin" }</code></pre>
+        <h4 class="font-semibold text-sm mt-3">cURL (simpan cookie ke file)</h4>
+        <pre><code>curl -X POST http://localhost:3003/api/admin/login \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{"username":"admin","password":"admin123"}'</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/logout</code></h3>
+        <p class="text-sm">Hapus session. Tidak butuh body.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true }</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/me</code></h3>
+        <p class="text-sm">Cek apakah session aktif dan ambil info admin saat ini.</p>
+        <h4 class="font-semibold text-sm mt-3">Response (sudah login)</h4>
+        <pre><code>{ "ok": true, "username": "admin", "loginAt": "2026-06-17T08:00:00.000Z" }</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response (belum login)</h4>
+        <pre><code>{ "error": "Not logged in" }  // HTTP 401</code></pre>
+      </div>
+
+      <!-- ==================== ADMIN DASHBOARD ==================== -->
+      <h2 id="dashboard" class="text-2xl font-bold mt-10 mb-3 section-title">&#128202; Admin Dashboard</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/dashboard</code> &#128274;</h3>
+        <p class="text-sm">Statistik lengkap: total semua waktu, hari ini, bulan ini, pending, grafik harian 7 hari terakhir, top 5 sawer.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "all":     { "count": 100, "total": 5000000 },
+  "today":   { "count": 5,   "total": 50000   },
+  "month":   { "count": 50,  "total": 2500000 },
+  "pending": { "count": 3 },
+  "daily": [
+    { "day": "2026-06-11", "count": 2, "total": 30000 }
+  ],
+  "top": [
+    {
+      "amount": 1000000,
+      "amountFormatted": "Rp 1.000.000",
+      "donorName": "Big Boss",
+      "paidAt": "2026-06-11T..."
+    }
+  ]
+}</code></pre>
+      </div>
+
+      <!-- ==================== ADMIN SETTINGS ==================== -->
+      <h2 id="settings" class="text-2xl font-bold mt-10 mb-3 section-title">&#9881;&#65039; Admin Settings</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/settings</code> &#128274;</h3>
+        <p class="text-sm">Ambil semua settings sebagai object key-value.</p>
+        <h4 class="font-semibold text-sm mt-3">Response (contoh)</h4>
+        <pre><code>{
+  "creator_name": "DRP Network",
+  "creator_tagline": "Terima kasih!",
+  "website_url": "https://dianrp.com",
+  "avatar_url": "/images/logo_blue.webp",
+  "banner_url": "",
+  "primary_color": "#6c5ce7",
+  "qris_static": "00020101021126...",
+  "preset_amounts": "5000,10000,20000,50000,100000",
+  "min_amount": "2000",
+  "max_amount": "5000000",
+  "custom_amount_enabled": "true",
+  "donor_name_enabled": "true",
+  "message_enabled": "true",
+  "qr_expiry_hours": "24",
+  "footer_text": "&#169; 2026 DRP Network"
+}</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge put">PUT</span><code>/api/admin/settings</code> &#128274;</h3>
+        <p class="text-sm">Update satu atau lebih settings. Partial update &mdash; hanya sertakan key yang ingin diubah.</p>
+        <h4 class="font-semibold text-sm mt-3">Allowed keys</h4>
+        <p class="text-xs text-base-content/60 mb-2"><code>creator_name</code>, <code>creator_tagline</code>, <code>website_url</code>, <code>avatar_url</code>, <code>banner_url</code>, <code>primary_color</code>, <code>qris_static</code>, <code>preset_amounts</code>, <code>min_amount</code>, <code>max_amount</code>, <code>custom_amount_enabled</code>, <code>donor_name_enabled</code>, <code>message_enabled</code>, <code>qr_expiry_hours</code>, <code>footer_text</code></p>
+        <h4 class="font-semibold text-sm mt-3">Body (contoh)</h4>
+        <pre><code>{
+  "creator_name": "Dian",
+  "qris_static": "00020101021126...",
+  "preset_amounts": "5000,10000,25000,50000,100000",
+  "min_amount": "2000",
+  "max_amount": "5000000"
+}</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true }</code></pre>
+      </div>
+
+      <!-- ==================== BRANDING ==================== -->
+      <h2 id="branding" class="text-2xl font-bold mt-10 mb-3 section-title">&#127912; Branding</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/branding/logo</code> &#128274;</h3>
+        <p class="text-sm">Upload logo kreator. Disimpan ke <code>/uploads/logos/</code> dan otomatis update setting <code>avatar_url</code>.</p>
+        <p class="text-xs text-base-content/60 mt-1">Maks 2MB. Format: JPG, PNG, GIF, WEBP. (SVG tidak didukung karena risiko XSS.)</p>
+        <h4 class="font-semibold text-sm mt-3">Form Data</h4>
+        <pre><code>field: file  (binary image)</code></pre>
+        <h4 class="font-semibold text-sm mt-3">cURL</h4>
+        <pre><code>curl -b cookies.txt -X POST http://localhost:3003/api/admin/branding/logo \
+  -F "file=@logo.png"</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true, "url": "/uploads/logos/1718611200000-abc123.png", "filename": "1718611200000-abc123.png" }</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/branding/banner</code> &#128274;</h3>
+        <p class="text-sm">Upload banner halaman sawer. Disimpan ke <code>/uploads/banners/</code> dan otomatis update setting <code>banner_url</code>.</p>
+        <p class="text-xs text-base-content/60 mt-1">Maks 2MB. Format: JPG, PNG, GIF, WEBP.</p>
+        <h4 class="font-semibold text-sm mt-3">cURL</h4>
+        <pre><code>curl -b cookies.txt -X POST http://localhost:3003/api/admin/branding/banner \
+  -F "file=@banner.jpg"</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true, "url": "/uploads/banners/1718611200000-xyz789.jpg", "filename": "1718611200000-xyz789.jpg" }</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge delete">DELETE</span><code>/api/admin/branding/:type</code> &#128274;</h3>
+        <p class="text-sm">Reset branding ke default. <code>:type</code> = <code>logo</code> (reset ke <code>/images/logo_blue.webp</code>) atau <code>banner</code> (kosongkan).</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true }</code></pre>
+      </div>
+
+      <!-- ==================== WEBHOOKS ==================== -->
+      <h2 id="webhooks" class="text-2xl font-bold mt-10 mb-3 section-title">&#128276; Webhooks</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/webhooks</code> &#128274;</h3>
+        <p class="text-sm">List semua webhook yang terdaftar.</p>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/webhooks</code> &#128274;</h3>
+        <p class="text-sm">Tambah webhook baru.</p>
+        <h4 class="font-semibold text-sm mt-3">Body</h4>
+        <pre><code>{
+  "name":       "Discord Notif",
+  "type":       "discord",          // "discord" | "telegram" | "custom"
+  "url":        "https://discord.com/api/webhooks/...",
+  "enabled":    true,
+  "trigger_on": "paid",             // "paid" | "created" | "both"
+  "secret":     "optional-secret"  // opsional, dikirim sebagai X-Webhook-Secret header
+}</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <p class="text-sm">Object webhook yang baru dibuat (termasuk <code>id</code>).</p>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge put">PUT</span><code>/api/admin/webhooks/:id</code> &#128274;</h3>
+        <p class="text-sm">Update webhook. Body partial &mdash; hanya sertakan field yang ingin diubah.</p>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge delete">DELETE</span><code>/api/admin/webhooks/:id</code> &#128274;</h3>
+        <p class="text-sm">Hapus webhook permanen.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true }</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/webhooks/:id/test</code> &#128274;</h3>
+        <p class="text-sm">Kirim payload dummy ke webhook untuk verifikasi koneksi.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true, "status": 200, "duration": 120, "response": "ok" }</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/webhook-logs</code> &#128274;</h3>
+        <p class="text-sm">Lihat log pengiriman webhook, join dengan nama dan tipe webhook.</p>
+        <h4 class="font-semibold text-sm mt-3">Query Params</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>limit</code> &mdash; 1&ndash;200 (default: <code>50</code>)</li>
+        </ul>
+      </div>
+
+      <!-- ==================== SOCIALS ==================== -->
+      <h2 id="socials" class="text-2xl font-bold mt-10 mb-3 section-title">&#128279; Social Links</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/socials</code> &#128274;</h3>
+        <p class="text-sm">List semua social link, diurutkan berdasarkan <code>display_order</code> lalu <code>id</code>.</p>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/socials</code> &#128274;</h3>
+        <p class="text-sm">Tambah social link baru.</p>
+        <h4 class="font-semibold text-sm mt-3">Body</h4>
+        <pre><code>{
+  "platform":      "instagram",                 // Wajib
+  "url":           "https://instagram.com/xxx", // Wajib
+  "label":         "Instagram Saya",            // Opsional
+  "icon":          "instagram",                 // Opsional, default = platform
+  "display_order": 1,                           // Opsional, default 0
+  "enabled":       true                         // Opsional, default true
+}</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <p class="text-sm">Object social link yang baru dibuat.</p>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge put">PUT</span><code>/api/admin/socials/:id</code> &#128274;</h3>
+        <p class="text-sm">Update social link. Body partial.</p>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge delete">DELETE</span><code>/api/admin/socials/:id</code> &#128274;</h3>
+        <p class="text-sm">Hapus social link permanen.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true }</code></pre>
+      </div>
+
+      <!-- ==================== DONATIONS ADMIN ==================== -->
+      <h2 id="donations-admin" class="text-2xl font-bold mt-10 mb-3 section-title">&#128176; Admin Donations</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/donations</code> &#128274;</h3>
+        <p class="text-sm">List semua donasi dengan filter dan pagination.</p>
+        <h4 class="font-semibold text-sm mt-3">Query Params</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>page</code> &mdash; default <code>1</code></li>
+          <li><code>limit</code> &mdash; default <code>20</code>, maks <code>100</code></li>
+          <li><code>status</code> &mdash; <code>pending</code> | <code>paid</code> | <code>expired</code> | <code>cancelled</code></li>
+          <li><code>period</code> &mdash; <code>today</code> | <code>month</code></li>
+          <li><code>q</code> &mdash; search by nama donor, pesan, atau token</li>
+        </ul>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "page": 1,
+  "limit": 20,
+  "total": 150,
+  "totalAmount": 7500000,
+  "items": [ { "id": 1, "qr_token": "...", "amount": 10023, "status": "paid", ... } ]
+}</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/donations/:id</code> &#128274;</h3>
+        <p class="text-sm">Detail satu donasi by ID numerik.</p>
+        <h4 class="font-semibold text-sm mt-3">Error</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>404</code> &mdash; Donasi tidak ditemukan</li>
+        </ul>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge patch">PATCH</span><code>/api/admin/donations/:id/status</code> &#128274;</h3>
+        <p class="text-sm">Update status donasi secara manual. Jika berubah menjadi <code>paid</code>, webhook notifikasi dijalankan.</p>
+        <h4 class="font-semibold text-sm mt-3">Body</h4>
+        <pre><code>{ "status": "paid" }   // "pending" | "paid" | "expired" | "cancelled"</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <p class="text-sm">Object donation yang sudah diupdate.</p>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge delete">DELETE</span><code>/api/admin/donations/:id</code> &#128274;</h3>
+        <p class="text-sm">Hapus donasi permanen.</p>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{ "ok": true }</code></pre>
+      </div>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge get">GET</span><code>/api/admin/donations/export.csv</code> &#128274;</h3>
+        <p class="text-sm">Download semua donasi sebagai CSV. UTF-8 dengan BOM (siap dibuka di Microsoft Excel).</p>
+        <p class="text-xs text-base-content/60 mt-1">Kolom: ID, Token, Amount, Donor Name, Message, Status, Paid Via, Created At, Paid At</p>
+        <h4 class="font-semibold text-sm mt-3">cURL</h4>
+        <pre><code>curl -b cookies.txt "http://localhost:3003/api/admin/donations/export.csv" -o donations.csv</code></pre>
+      </div>
+
+      <!-- ==================== QRIS PREVIEW ==================== -->
+      <h2 id="qris" class="text-2xl font-bold mt-10 mb-3 section-title">&#128269; QRIS Preview</h2>
+
+      <div class="endpoint-block bg-base-100">
+        <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/qris/preview</code> &#128274;</h3>
+        <p class="text-sm">Upload gambar QRIS statis untuk auto-decode string QRIS-nya, plus preview QR dinamis dengan nominal Rp 10.000 untuk verifikasi.</p>
+        <p class="text-xs text-base-content/60 mt-1">File temporary langsung dihapus setelah di-decode. Maks 2MB. Format: JPG, PNG, GIF, WEBP.</p>
+        <h4 class="font-semibold text-sm mt-3">Form Data</h4>
+        <pre><code>field: file  (binary image QRIS)</code></pre>
+        <h4 class="font-semibold text-sm mt-3">cURL</h4>
+        <pre><code>curl -b cookies.txt -X POST http://localhost:3003/api/admin/qris/preview \
+  -F "file=@qris.png"</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Response</h4>
+        <pre><code>{
+  "ok": true,
+  "qris": "00020101021126...",
+  "previewQr": "data:image/png;base64,..."
+}</code></pre>
+        <h4 class="font-semibold text-sm mt-3">Error</h4>
+        <ul class="list-disc list-inside text-sm">
+          <li><code>400</code> &mdash; Tidak ada file yang diupload</li>
+          <li><code>500</code> &mdash; Gagal decode QR dari gambar</li>
+        </ul>
+      </div>
+
+      <!-- ==================== FOOTER ==================== -->
+      <div class="mt-10 p-4 bg-base-200 rounded-lg text-center text-sm">
+        <p>&#129302; Setup auto-confirm via Macrodroid: lihat seksi <a href="#macrodroid" class="link">Macrodroid Auto-Confirm</a> di atas.</p>
+        <p class="text-xs opacity-60 mt-1">Sawerdian &copy; 2026 &mdash; By Dian Rama Putra</p>
+      </div>
+    </main>
   </body>
 </html>

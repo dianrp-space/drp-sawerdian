@@ -1,0 +1,191 @@
+/* ==============================================
+   Sawerdian - Custom styles
+   ============================================== */
+
+:root {
+  --drp-primary: #6c5ce7;
+  --drp-primary-rgb: 108, 92, 231;
+}
+
+html,
+body {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, color-mix(in srgb, var(--drp-primary) 18%, transparent), transparent 70%),
+    var(--color-base-100);
+  background-attachment: fixed;
+}
+
+/* Floating particle effect for hero */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(3deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* QR pulse glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--drp-primary) 50%, transparent),
+                0 0 20px color-mix(in srgb, var(--drp-primary) 30%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--drp-primary) 0%, transparent),
+                0 0 40px color-mix(in srgb, var(--drp-primary) 50%, transparent);
+  }
+}
+
+.qr-pulse {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+/* Fade in up */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out backwards;
+}
+
+.animate-fade-in-up-d1 { animation-delay: 0.1s; }
+.animate-fade-in-up-d2 { animation-delay: 0.2s; }
+.animate-fade-in-up-d3 { animation-delay: 0.3s; }
+
+/* Countdown style */
+.countdown-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Confetti burst on submit */
+@keyframes confettiPop {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1.4) rotate(180deg); opacity: 0; }
+}
+
+.confetti {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: confettiPop 0.9s ease-out forwards;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: color-mix(in srgb, var(--color-base-100) 70%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--color-base-content) 8%, transparent);
+}
+
+/* Leaderboard rank medal */
+.rank-1 { color: gold; }
+.rank-2 { color: silver; }
+.rank-3 { color: #cd7f32; } /* bronze */
+
+/* Smooth modal animation */
+dialog.modal[open] .modal-box {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Hide scrollbar tapi tetap bisa scroll */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-base-content) 20%, transparent);
+  border-radius: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Sawer page main container */
+.sawer-container {
+  max-width: 480px;
+  margin-inline: auto;
+  padding: 1rem;
+}
+
+/* Brand icon - bulat dengan warna sesuai platform */
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease;
+  text-decoration: none;
+}
+
+.brand-icon:hover {
+  transform: scale(1.1);
+}
+
+.brand-icon-sm {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+}
+
+.brand-icon-lg {
+  width: 48px;
+  height: 48px;
+  font-size: 18px;
+}
+
+
+/* Top sawer card hover */
+.top-sawer-card {
+  transition: all 0.2s ease;
+}
+.top-sawer-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--drp-primary) 15%, transparent);
+}
+
+/* Subtle gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--drp-primary), color-mix(in srgb, var(--drp-primary) 50%, #ff7675));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Animated dots for loading */
+@keyframes dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+.loading-dots::after {
+  content: '...';
+  display: inline-block;
+  animation: dots 1.4s steps(4) infinite;
+}
