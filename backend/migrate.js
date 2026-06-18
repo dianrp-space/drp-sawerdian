@@ -46,6 +46,7 @@ CREATE INDEX IF NOT EXISTS idx_donations_amount_pending ON donations(amount) WHE
 ALTER TABLE donations ADD COLUMN IF NOT EXISTS base_amount INTEGER;
 ALTER TABLE donations ADD COLUMN IF NOT EXISTS unique_code INTEGER DEFAULT 0;
 ALTER TABLE donations ADD COLUMN IF NOT EXISTS paid_via_app VARCHAR(50);
+ALTER TABLE donations ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN DEFAULT false;
 
 
 -- Webhooks

@@ -211,7 +211,7 @@ router.get('/api/config', async (req, res) => {
    ============================================================ */
 router.post('/api/donations', donationLimiter, async (req, res) => {
   try {
-    const { amount, donorName, message } = req.body || {};
+    const { amount, donorName, message, isAnonymous } = req.body || {};
     const baseAmount = parseInt(amount, 10);
 
     if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
@@ -256,8 +256,8 @@ router.post('/api/donations', donationLimiter, async (req, res) => {
 
     const insertRes = await query(
       `INSERT INTO donations
-         (qr_token, amount, base_amount, unique_code, donor_name, message, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (qr_token, amount, base_amount, unique_code, donor_name, message, ip_address, user_agent, is_anonymous)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         qrToken,
@@ -268,6 +268,7 @@ router.post('/api/donations', donationLimiter, async (req, res) => {
         cleanMessage,
         req.ip || req.headers['x-forwarded-for'] || null,
         (req.headers['user-agent'] || '').substring(0, 500),
+        isAnonymous === true
       ]
     );
     const donation = insertRes.rows[0];
@@ -577,7 +578,7 @@ router.get('/api/leaderboard', async (req, res) => {
     }
 
     const result = await query(
-      `SELECT id, amount, base_amount, unique_code, donor_name, message, paid_at
+      `SELECT id, amount, base_amount, unique_code, donor_name, message, paid_at, is_anonymous
        FROM donations
        WHERE status = 'paid' ${dateFilter}
        ORDER BY amount DESC, paid_at DESC
@@ -594,7 +595,7 @@ router.get('/api/leaderboard', async (req, res) => {
         uniqueCode: d.unique_code,
         amount: d.amount,
         amountFormatted: formatIDR(d.amount),
-        donorName: maskName(d.donor_name),
+        donorName: d.is_anonymous ? maskName(d.donor_name) : (d.donor_name || 'Anonim'),
         message: d.message || null,
         paidAt: d.paid_at,
       })),

@@ -334,6 +334,7 @@ async function submitSawer() {
 
   const donorName = document.getElementById('donorName').value.trim();
   const message = document.getElementById('message').value.trim();
+  const isAnonymous = document.getElementById('isAnonymous')?.checked || false;
 
   const btn = document.getElementById('sawerBtn');
   const loading = document.getElementById('btnLoading');
@@ -349,6 +350,7 @@ async function submitSawer() {
         amount,
         donorName: donorName || null,
         message: message || null,
+        isAnonymous,
       }),
     });
 

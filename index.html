@@ -91,16 +91,22 @@
 
             <div class="divider text-xs text-base-content/50 my-2">Nama dan Pesan</div>
 
-            <label class="floating-label" id="donorNameWrap">
-              <span>Namamu, random jika kosong</span>
-              <input
-                type="text"
-                id="donorName"
-                class="input input-bordered w-full"
-                placeholder="contoh: Anonim"
-                maxlength="100"
-              />
-            </label>
+            <div id="donorNameWrap" class="space-y-2">
+              <label class="floating-label">
+                <span>Namamu, random jika kosong</span>
+                <input
+                  type="text"
+                  id="donorName"
+                  class="input input-bordered w-full"
+                  placeholder="contoh: Anonim"
+                  maxlength="100"
+                />
+              </label>
+              <label class="label cursor-pointer justify-start gap-2 pt-0">
+                <input type="checkbox" id="isAnonymous" class="checkbox checkbox-sm" />
+                <span class="text-xs text-base-content/70 font-semibold">Tampilkan nama sebagai anonim di ranking</span>
+              </label>
+            </div>
 
             <label class="floating-label" id="messageWrap">
               <span>Pesan / dukungan (opsional)</span>
