@@ -336,20 +336,28 @@ async function renderOverview() {
       <div class="card bg-base-100 shadow-md border-2 border-base-300">
         <div class="card-body p-4">
           <h3 class="font-bold text-sm text-base-content">7 Hari Terakhir</h3>
-          <div class="flex items-end gap-1 h-32 mt-2">
+          
+          <div class="flex items-end gap-2 h-28 mt-4">
             ${data.daily.length === 0 ? '<p class="text-sm text-base-content/50 m-auto font-medium">Belum ada data</p>' : data.daily.map((d) => {
-              // Pastikan maxDay dihitung berdasarkan 'total' max dari backend
               const safeMaxDay = maxDay > 0 ? maxDay : 1;
               const h = Math.max((d.total / safeMaxDay) * 100, 4);
-              const dayLabel = new Date(d.day).toLocaleDateString('id-ID', { weekday: 'short' });
               return `
-                <div class="flex-1 flex flex-col items-center gap-1" title="${formatIDR(d.total)} - ${d.count} sawer">
-                  <div class="w-full bg-primary/80 rounded-t min-h-[4px]" style="height: ${h}%"></div>
-                  <span class="text-[10px] text-base-content/70 font-bold">${dayLabel}</span>
-                </div>
+                <div class="flex-1 bg-primary/80 rounded-t min-h-[4px] cursor-help hover:brightness-110 transition-all" style="height: ${h}%" title="${formatIDR(d.total)} - ${d.count} sawer"></div>
               `;
             }).join('')}
           </div>
+          
+          ${data.daily.length > 0 ? `
+          <div class="flex items-center gap-2 mt-2 pt-2 border-t border-base-200">
+            ${data.daily.map((d) => {
+              const dayLabel = new Date(d.day).toLocaleDateString('id-ID', { weekday: 'short' });
+              return `
+                <div class="flex-1 text-center text-[10px] text-base-content/70 font-bold truncate">${dayLabel}</div>
+              `;
+            }).join('')}
+          </div>
+          ` : ''}
+
         </div>
       </div>
 
