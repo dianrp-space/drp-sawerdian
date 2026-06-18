@@ -32,6 +32,27 @@
     });
     const data = await res.json().catch(() => null);
     if (!res.ok) {
+      // [SECURITY] Rate limit (HTTP 429): tampilkan sisa waktu dari header
+      // `Retry-After` (detik) atau `RateLimit-Reset` (unix seconds) supaya
+      // user tahu kapan boleh coba lagi.
+      if (res.status === 429) {
+        const retryAfter = res.headers.get('retry-after');
+        const reset = res.headers.get('ratelimit-reset');
+        let waitMsg = 'beberapa saat lagi';
+        if (retryAfter) {
+          const sec = parseInt(retryAfter, 10);
+          if (Number.isFinite(sec) && sec > 0) {
+            waitMsg = sec < 60 ? `${sec} detik` : `${Math.ceil(sec / 60)} menit`;
+          }
+        } else if (reset) {
+          const sec = parseInt(reset, 10) - Math.floor(Date.now() / 1000);
+          if (Number.isFinite(sec) && sec > 0) {
+            waitMsg = sec < 60 ? `${sec} detik` : `${Math.ceil(sec / 60)} menit`;
+          }
+        }
+        const msg = data?.error || 'Terlalu banyak permintaan';
+        throw new Error(`${msg} Coba lagi dalam ${waitMsg}.`);
+      }
       throw new Error(data?.error || `HTTP ${res.status}`);
     }
     return data;

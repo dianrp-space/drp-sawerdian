@@ -14,12 +14,18 @@
  */
 import express from 'express';
 import QRCode from 'qrcode';
-import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
 import { query } from './db.js';
 import { generateDynamicQRIS } from './qris-generator.js';
 import { dispatchWebhooks } from './webhook.js';
 import { safeEqual } from './auth.js';
+import {
+  donationLimiter,
+  macrodroidLimiter,
+  commentLimiter,
+  commentGlobalLimiter,
+  leaderboardReadLimiter,
+} from './rate-limit-config.js';
 
 const router = express.Router();
 
@@ -195,31 +201,10 @@ function basicAuth(req, res, next) {
 
 /* ============================================================
    RATE LIMITS
-   ============================================================ */
-const donationLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 10,
-  message: { error: 'Terlalu banyak percobaan. Coba lagi dalam 5 menit.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// [SECURITY] Rate limit untuk /api/macrodroid/confirm
-const macrodroidLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 menit
-  max: 30,
-  message: { error: 'Terlalu banyak request ke endpoint Macrodroid.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-const commentLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 20,
-  message: { error: 'Terlalu banyak komentar. Coba lagi dalam 10 menit.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+   ============================================================
+   Semua limiter di-import dari rate-limit-config.js — lihat file
+   tersebut untuk dokumentasi tiap limiter (window, max, tujuan).
+*/
 /* ============================================================
    GET /api/config
    ============================================================ */
@@ -669,7 +654,8 @@ router.get('/api/macrodroid/test', basicAuth, (req, res) => {
 /* ============================================================
    GET /api/leaderboard
    ============================================================ */
-router.get('/api/leaderboard', async (req, res) => {
+// leaderboardReadLimiter: anti-scraper (max 60/menit per IP, default config)
+router.get('/api/leaderboard', leaderboardReadLimiter, async (req, res) => {
   try {
     const period = req.query.period || 'all';
     const limit = Math.min(parseInt(req.query.limit || '50', 10), 200);
@@ -788,7 +774,10 @@ router.get('/api/leaderboard/:donationId/comments', async (req, res) => {
 /* ============================================================
    POST /api/leaderboard/:donationId/comments
    ============================================================ */
-router.post('/api/leaderboard/:donationId/comments', commentLimiter, async (req, res) => {
+// Dua lapis rate limit:
+//  - commentLimiter:        max 5 / 10 menit per IP per donationId
+//  - commentGlobalLimiter:  max 20 / 10 menit per IP (semua donation)
+router.post('/api/leaderboard/:donationId/comments', commentLimiter, commentGlobalLimiter, async (req, res) => {
   try {
     const donationId = parseInt(req.params.donationId, 10);
     const { authorName, content } = req.body || {};

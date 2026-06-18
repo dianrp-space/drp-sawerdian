@@ -13,6 +13,10 @@ import { requireAdmin, login, logout, me } from './auth.js';
 import { dispatchWebhooks, testWebhook } from './webhook.js';
 import { generateDynamicQRIS } from './qris-generator.js';
 import { decodeQRFromImage } from './qris-image.js';
+import {
+  adminLoginLimiter,
+  adminTestWebhookLimiter,
+} from './rate-limit-config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,7 +93,9 @@ async function setSetting(key, value) {
 /* ============================================================
    AUTH (sub-route)
    ============================================================ */
-router.post('/api/admin/login', login);
+// [SECURITY] Anti brute-force login: max 5x gagal / 15 menit per IP
+// Login berhasil tidak dihitung (skipSuccessfulRequests: true)
+router.post('/api/admin/login', adminLoginLimiter, login);
 router.post('/api/admin/logout', logout);
 router.get('/api/admin/me', me);
 
@@ -328,7 +334,10 @@ router.delete('/api/admin/webhooks/:id', requireAdmin, async (req, res) => {
   }
 });
 
-router.post('/api/admin/webhooks/:id/test', requireAdmin, async (req, res) => {
+// [SECURITY] Anti abuse test webhook: max 10x / jam per admin
+// requireAdmin dipasang dulu supaya req.session.userId tersedia
+// untuk keyGenerator (IP + userId) di adminTestWebhookLimiter
+router.post('/api/admin/webhooks/:id/test', requireAdmin, adminTestWebhookLimiter, async (req, res) => {
   try {
     const result = await query(`SELECT * FROM webhooks WHERE id = $1`, [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Webhook tidak ditemukan' });
