@@ -338,11 +338,13 @@ async function renderOverview() {
           <h3 class="font-bold text-sm text-base-content">7 Hari Terakhir</h3>
           <div class="flex items-end gap-1 h-32 mt-2">
             ${data.daily.length === 0 ? '<p class="text-sm text-base-content/50 m-auto font-medium">Belum ada data</p>' : data.daily.map((d) => {
-              const h = Math.max((d.total / maxDay) * 100, 4);
+              // Pastikan maxDay dihitung berdasarkan 'total' max dari backend
+              const safeMaxDay = maxDay > 0 ? maxDay : 1;
+              const h = Math.max((d.total / safeMaxDay) * 100, 4);
               const dayLabel = new Date(d.day).toLocaleDateString('id-ID', { weekday: 'short' });
               return `
                 <div class="flex-1 flex flex-col items-center gap-1" title="${formatIDR(d.total)} - ${d.count} sawer">
-                  <div class="w-full bg-primary/80 rounded-t" style="height: ${h}%"></div>
+                  <div class="w-full bg-primary/80 rounded-t min-h-[4px]" style="height: ${h}%"></div>
                   <span class="text-[10px] text-base-content/70 font-bold">${dayLabel}</span>
                 </div>
               `;
