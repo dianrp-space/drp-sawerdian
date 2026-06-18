@@ -1,4 +1,4 @@
-# 💸 Sawerdian
+# <img src="images/drp-coffe.webp" width="30" height="30" align="top"> Sawerdian
 
 Website sawer (tipping) mirip Saweria/Trakteer, khusus pembayaran via **QRIS**.
 Dibangun dengan Node.js + Express + PostgreSQL + daisyUI (Tailwind CSS).
