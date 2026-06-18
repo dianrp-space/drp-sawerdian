@@ -74,7 +74,7 @@ Response:
     "name": "Dian",
     "tagline": "Terima kasih sudah mendukung!",
     "website": "https://dianrp.com",
-    "avatar": "/images/logo_blue.webp",
+    "avatar": "/images/avatar.png",
     "banner": "",
     "primaryColor": "#6c5ce7"
   },

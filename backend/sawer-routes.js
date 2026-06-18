@@ -182,7 +182,7 @@ router.get('/api/config', async (req, res) => {
         name: settings.creator_name || 'DRP Network',
         tagline: settings.creator_tagline || '',
         website: settings.website_url || '',
-        avatar: toAbsoluteUrl(settings.avatar_url || '/images/logo_blue.webp'),
+        avatar: toAbsoluteUrl(settings.avatar_url || '/images/avatar.png'),
         banner: toAbsoluteUrl(settings.banner_url || ''),
         primaryColor: settings.primary_color || '#6c5ce7',
       },

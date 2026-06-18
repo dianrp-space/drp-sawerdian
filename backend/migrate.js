@@ -103,7 +103,7 @@ const DEFAULT_SETTINGS = [
   { key: 'creator_name', value: 'Dian' },
   { key: 'creator_tagline', value: 'Terima kasih sudah mendukung! Dukunganmu sangat berarti 🚀' },
   { key: 'website_url', value: 'https://dianrp.com' },
-  { key: 'avatar_url', value: '/images/logo_blue.webp' },
+  { key: 'avatar_url', value: '/images/avatar.png' },
   { key: 'banner_url', value: '' },
   { key: 'primary_color', value: '#6c5ce7' },
 

@@ -266,7 +266,7 @@ function renderPresets(presets) {
     btn.type = 'button';
     btn.className = 'btn btn-outline btn-primary btn-lg';
     btn.dataset.amount = amount;
-    btn.innerHTML = `<span class="font-bold">${formatShort(amount)}</span>`;
+    btn.innerHTML = `💸 <span class="font-bold">${formatShort(amount)}</span>`;
     btn.addEventListener('click', () => selectPreset(amount, btn));
     grid.appendChild(btn);
   });
@@ -323,10 +323,12 @@ async function submitSawer() {
   const config = state.config;
   if (amount < config.donation.minAmount) {
     showToast(`Nominal minimum ${formatIDR(config.donation.minAmount)}`, 'warning');
+    showToast(`Parkir aja ${formatIDR(config.donation.minAmount)}, bos!`, 'warning');
     return;
   }
   if (amount > config.donation.maxAmount) {
     showToast(`Nominal maksimum ${formatIDR(config.donation.maxAmount)}`, 'warning');
+    showToast(`Jangan berlebihan, ${formatIDR(config.donation.maxAmount)} sudah cukup, bos!`, 'warning');
     return;
   }
 

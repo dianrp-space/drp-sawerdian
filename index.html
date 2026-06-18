@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sawer - DRP Network</title>
+    <title>SawerDian - Platform Sawer via QRIS</title>
     <meta name="description" content="Dukung kreator favoritmu dengan sawer via QRIS" />
-    <link rel="icon" type="image/png" href="/images/qris.png" />
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
 
     <!-- daisyUI 5 + Tailwind CSS v4 via CDN -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
@@ -15,29 +15,16 @@
   </head>
   <body>
     <!-- Navbar -->
-    <div class="navbar bg-base-100/70 backdrop-blur-md sticky top-0 z-30 border-b border-base-300">
-      <div class="flex-1">
-        <a href="/" class="btn btn-ghost text-lg font-bold">
-          <span class="gradient-text">SawerDian</span>
-        </a>
-      </div>
-      <div class="flex-none gap-1">
-        <a href="/leaderboard" class="btn btn-ghost btn-sm">
-          <span aria-hidden="true">🏆</span>
-          <span class="hidden sm:inline">Top Sawer</span>
-        </a>
-        <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm" aria-label="Toggle tema">
-          <input type="checkbox" id="themeToggle" class="theme-controller" value="dark" />
-          <svg class="swap-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-          <svg class="swap-on" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        </label>
-      </div>
+    <div class="navbar bg-base-100/70 backdrop-blur-md sticky top-0 z-30 border-b border-base-300 justify-center">
+      <a href="/" class="btn btn-outline text-lg font-bold">
+        <span class="gradient-text">SawerDian</span>
+      </a>
     </div>
 
     <main class="sawer-container">
       <!-- BANNER (optional) -->
       <div id="bannerWrap" class="hidden mt-4 animate-fade-in-up">
-        <img id="creatorBanner" class="w-full h-32 sm:h-40 object-cover rounded-2xl shadow" alt="Banner" />
+        <img id="creatorBanner" src="/images/banner.png" class="w-full h-32 sm:h-40 object-cover rounded-2xl shadow" alt="Banner" />
       </div>
 
       <!-- HERO -->
@@ -45,7 +32,7 @@
 
         <div class="avatar animate-float">
           <div class="w-28 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-            <img id="creatorAvatar" src="/images/logo_blue.webp" alt="Creator avatar" />
+            <img id="creatorAvatar" src="/images/avatar.png" alt="Creator avatar" />
           </div>
         </div>
         <h1 id="creatorName" class="text-3xl font-bold mt-4">Memuat...</h1>
@@ -53,6 +40,14 @@
 
         <!-- Social links -->
         <div id="socialLinks" class="flex flex-wrap justify-center gap-2 mt-4"></div>
+        
+        <!-- Top Sawer Link -->
+        <div class="mt-4 animate-fade-in-up animate-fade-in-up-d1">
+          <a href="/leaderboard" class="btn btn-outline">
+            <span aria-hidden="true" class="text-xl">🏆</span>
+            <span class="text-sm font-bold">Top Sawer Ranking</span>
+          </a>
+        </div>
       </section>
 
       <!-- STATS RINGKAS -->
@@ -83,24 +78,26 @@
           <!-- Custom amount + name + message -->
           <div class="space-y-3">
             <label class="floating-label">
-              <span>Nominal custom (Rp)</span>
+              <span>Tentukan sendiri saweranmu (Rp)</span>
               <input
                 type="number"
                 id="customAmount"
                 class="input input-bordered w-full"
-                placeholder="2000"
+                placeholder="💸 2000"
                 min="2000"
                 max="500000"
               />
             </label>
 
+            <div class="divider text-xs text-base-content/50 my-2">Nama dan Pesan</div>
+
             <label class="floating-label" id="donorNameWrap">
-              <span>Nama (opsional, akan di-mask di leaderboard)</span>
+              <span>Namamu, random jika kosong</span>
               <input
                 type="text"
                 id="donorName"
                 class="input input-bordered w-full"
-                placeholder="Anonim"
+                placeholder="contoh: Anonim"
                 maxlength="100"
               />
             </label>
@@ -110,7 +107,7 @@
               <textarea
                 id="message"
                 class="textarea textarea-bordered w-full"
-                placeholder="Semangat terus! 🚀"
+                placeholder="contoh: Semangat terus! 🚀"
                 maxlength="500"
                 rows="2"
               ></textarea>

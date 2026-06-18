@@ -380,7 +380,25 @@ async function renderOverview() {
 // TAB: DONATIONS
 // ============================================
 async function renderDonations(page = 1) {
-  const data = await api(`/api/admin/donations?page=${page}&limit=20`);
+  // Ambil nilai filter saat ini jika ada, atau gunakan yang tersimpan di state
+  const filterStatusEl = document.getElementById('filterStatus');
+  const filterPeriodEl = document.getElementById('filterPeriod');
+  const filterSearchEl = document.getElementById('filterSearch');
+  
+  const currentStatus = filterStatusEl ? filterStatusEl.value : (state.donationsFilter?.status || '');
+  const currentPeriod = filterPeriodEl ? filterPeriodEl.value : (state.donationsFilter?.period || '');
+  const currentSearch = filterSearchEl ? filterSearchEl.value : (state.donationsFilter?.search || '');
+  
+  // Simpan filter ke state
+  state.donationsFilter = { status: currentStatus, period: currentPeriod, search: currentSearch };
+
+  // Buat query string
+  const queryParams = new URLSearchParams({ page, limit: 20 });
+  if (currentStatus) queryParams.append('status', currentStatus);
+  if (currentPeriod) queryParams.append('period', currentPeriod);
+  if (currentSearch) queryParams.append('q', currentSearch);
+
+  const data = await api(`/api/admin/donations?${queryParams.toString()}`);
   state.data.donations = data;
 
   document.getElementById('tabContent').innerHTML = `
@@ -388,7 +406,14 @@ async function renderDonations(page = 1) {
       <div class="flex flex-wrap gap-2 items-center justify-between">
         <h2 class="text-xl font-bold">💰 Donations</h2>
         <div class="flex gap-2">
-          <a href="/api/admin/donations/export.csv" class="btn btn-sm btn-outline" target="_blank">⬇ Export CSV</a>
+          <div id="batchActionsWrap" class="hidden flex gap-1 items-center bg-base-200 p-1 px-2 border-2 border-black shadow-[2px_2px_0_0_#000]">
+            <span class="text-xs font-bold mr-1"><span id="selectedCount">0</span> dipilih:</span>
+            <button id="batchPaidBtn" class="btn btn-xs btn-success" title="Tandai Paid">✓</button>
+            <button id="batchCancelBtn" class="btn btn-xs btn-warning" title="Batalkan">✕</button>
+            <button id="batchExpiredBtn" class="btn btn-xs btn-ghost" title="Tandai Expired">⏰</button>
+            <button id="batchDeleteBtn" class="btn btn-xs btn-error" title="Hapus">🗑</button>
+          </div>
+          <a href="/api/admin/donations/export.csv?${queryParams.toString()}" class="btn btn-sm btn-outline" target="_blank">⬇ Export CSV</a>
         </div>
       </div>
 
@@ -397,18 +422,18 @@ async function renderDonations(page = 1) {
         <div class="card-body p-3">
           <div class="flex flex-wrap gap-2">
             <select id="filterStatus" class="select select-bordered select-sm">
-              <option value="">Semua status</option>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="expired">Expired</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="" ${currentStatus === '' ? 'selected' : ''}>Semua status</option>
+              <option value="pending" ${currentStatus === 'pending' ? 'selected' : ''}>Pending</option>
+              <option value="paid" ${currentStatus === 'paid' ? 'selected' : ''}>Paid</option>
+              <option value="expired" ${currentStatus === 'expired' ? 'selected' : ''}>Expired</option>
+              <option value="cancelled" ${currentStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
             </select>
             <select id="filterPeriod" class="select select-bordered select-sm">
-              <option value="">Semua waktu</option>
-              <option value="today">Hari ini</option>
-              <option value="month">Bulan ini</option>
+              <option value="" ${currentPeriod === '' ? 'selected' : ''}>Semua waktu</option>
+              <option value="today" ${currentPeriod === 'today' ? 'selected' : ''}>Hari ini</option>
+              <option value="month" ${currentPeriod === 'month' ? 'selected' : ''}>Bulan ini</option>
             </select>
-            <input type="text" id="filterSearch" class="input input-bordered input-sm flex-1 min-w-[150px]" placeholder="Cari nama, pesan, token..." />
+            <input type="text" id="filterSearch" class="input input-bordered input-sm flex-1 min-w-[150px]" placeholder="Cari nama, pesan, token..." value="${escapeHtml(currentSearch)}" />
             <button id="applyFilter" class="btn btn-sm btn-primary">Cari</button>
           </div>
         </div>
@@ -420,6 +445,7 @@ async function renderDonations(page = 1) {
           <table class="table table-sm">
             <thead>
               <tr>
+                <th><input type="checkbox" class="checkbox checkbox-sm" id="selectAllDonations" title="Pilih Semua" /></th>
                 <th>#</th>
                 <th>Nama / Donor</th>
                 <th>Nominal</th>
@@ -470,14 +496,111 @@ async function renderDonations(page = 1) {
     b.addEventListener('click', () => deleteDonation(b.dataset.id));
   });
 
+  // Batch delete & status update logic
+  const selectAll = document.getElementById('selectAllDonations');
+  const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+  const batchActionsWrap = document.getElementById('batchActionsWrap');
+  const batchPaidBtn = document.getElementById('batchPaidBtn');
+  const batchCancelBtn = document.getElementById('batchCancelBtn');
+  const batchExpiredBtn = document.getElementById('batchExpiredBtn');
+  const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+  const selectedCount = document.getElementById('selectedCount');
+
+  function updateBatchDeleteUI() {
+    const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+    const count = checkedBoxes.length;
+    
+    if (selectedCount) selectedCount.textContent = count;
+    
+    if (batchActionsWrap) {
+      if (count > 0) {
+        batchActionsWrap.classList.remove('hidden');
+      } else {
+        batchActionsWrap.classList.add('hidden');
+      }
+    }
+    
+    if (selectAll && rowCheckboxes.length > 0) {
+      selectAll.checked = count === rowCheckboxes.length;
+    }
+  }
+
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      rowCheckboxes.forEach(cb => {
+        cb.checked = e.target.checked;
+      });
+      updateBatchDeleteUI();
+    });
+  }
+
+  rowCheckboxes.forEach(cb => {
+    cb.addEventListener('change', updateBatchDeleteUI);
+  });
+
+  async function handleBatchStatus(status, btnElement, btnText) {
+    const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+    const ids = Array.from(checkedBoxes).map(cb => parseInt(cb.value, 10));
+    
+    if (ids.length === 0) return;
+    if (!confirm(`Ubah status ${ids.length} donasi menjadi "${status}"?`)) return;
+    
+    btnElement.disabled = true;
+    btnElement.innerHTML = '<span class="loading loading-spinner loading-xs"></span>';
+    
+    try {
+      await api('/api/admin/donations/batch/status', {
+        method: 'PATCH',
+        body: JSON.stringify({ ids, status }),
+      });
+      showToast(`Status ${ids.length} donasi diubah ke ${status}`, 'success');
+      renderDonations(state.data.donations.page);
+    } catch (err) {
+      showToast(err.message, 'error');
+      btnElement.disabled = false;
+      btnElement.innerHTML = btnText;
+    }
+  }
+
+  if (batchPaidBtn) batchPaidBtn.addEventListener('click', () => handleBatchStatus('paid', batchPaidBtn, '✓'));
+  if (batchCancelBtn) batchCancelBtn.addEventListener('click', () => handleBatchStatus('cancelled', batchCancelBtn, '✕'));
+  if (batchExpiredBtn) batchExpiredBtn.addEventListener('click', () => handleBatchStatus('expired', batchExpiredBtn, '⏰'));
+
+  if (batchDeleteBtn) {
+    batchDeleteBtn.addEventListener('click', async () => {
+      const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+      const ids = Array.from(checkedBoxes).map(cb => parseInt(cb.value, 10));
+      
+      if (ids.length === 0) return;
+      if (!confirm(`Hapus ${ids.length} donasi terpilih secara permanen?`)) return;
+      
+      batchDeleteBtn.disabled = true;
+      batchDeleteBtn.innerHTML = '<span class="loading loading-spinner loading-xs"></span>';
+      
+      try {
+        await api('/api/admin/donations/batch', {
+          method: 'DELETE',
+          body: JSON.stringify({ ids }),
+        });
+        showToast(`${ids.length} donasi berhasil dihapus`, 'success');
+        renderDonations(state.data.donations.page);
+      } catch (err) {
+        showToast(err.message, 'error');
+        batchDeleteBtn.disabled = false;
+        batchDeleteBtn.innerHTML = '🗑';
+      }
+    });
+  }
+
 }
 
 function renderDonationsRows(items) {
   if (items.length === 0) {
-    return '<tr><td colspan="7" class="text-center py-8 text-base-content/50">Belum ada donasi</td></tr>';
+    return '<tr><td colspan="8" class="text-center py-8 text-base-content/50">Belum ada donasi</td></tr>';
   }
   return items.map((d) => `
     <tr>
+      <td><input type="checkbox" class="checkbox checkbox-sm row-checkbox" value="${d.id}" /></td>
       <td class="text-xs text-base-content/50">#${d.id}</td>
       <td>
         <div class="font-semibold text-sm">${escapeHtml(d.donor_name || 'Anonim')}</div>

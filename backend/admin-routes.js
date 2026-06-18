@@ -22,12 +22,8 @@ const router = express.Router();
 /* ============================================================
    UPLOADS SETUP
    ============================================================ */
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-const LOGOS_DIR = path.join(UPLOADS_DIR, 'logos');
-const BANNERS_DIR = path.join(UPLOADS_DIR, 'banners');
-[UPLOADS_DIR, LOGOS_DIR, BANNERS_DIR].forEach((d) => {
-  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
-});
+const IMAGES_DIR = path.join(__dirname, '../images');
+if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
 
 const MAX_UPLOAD = parseInt(process.env.MAX_UPLOAD_SIZE || '2097152', 10); // 2MB
 
@@ -44,21 +40,20 @@ function makeStorage(targetDir) {
   return multer.diskStorage({
     destination: (req, file, cb) => cb(null, targetDir),
     filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase() || '.png';
-      const safe = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
-      cb(null, safe);
+      // Gunakan nama file asli sesuai permintaan
+      cb(null, file.originalname);
     },
   });
 }
 
 const uploadLogo = multer({
-  storage: makeStorage(LOGOS_DIR),
+  storage: makeStorage(IMAGES_DIR),
   fileFilter,
   limits: { fileSize: MAX_UPLOAD },
 });
 
 const uploadBanner = multer({
-  storage: makeStorage(BANNERS_DIR),
+  storage: makeStorage(IMAGES_DIR),
   fileFilter,
   limits: { fileSize: MAX_UPLOAD },
 });
@@ -207,9 +202,9 @@ router.put('/api/admin/settings', requireAdmin, async (req, res) => {
 router.post('/api/admin/branding/logo', requireAdmin, uploadLogo.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'File wajib diupload' });
-    const url = `/uploads/logos/${req.file.filename}`;
+    const url = `/images/${req.file.originalname}`;
     await setSetting('avatar_url', url);
-    res.json({ ok: true, url, filename: req.file.filename });
+    res.json({ ok: true, url, filename: req.file.originalname });
   } catch (err) {
     console.error('❌ upload logo error:', err.message);
     res.status(500).json({ error: 'Gagal upload' });
@@ -219,9 +214,9 @@ router.post('/api/admin/branding/logo', requireAdmin, uploadLogo.single('file'),
 router.post('/api/admin/branding/banner', requireAdmin, uploadBanner.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'File wajib diupload' });
-    const url = `/uploads/banners/${req.file.filename}`;
+    const url = `/images/${req.file.originalname}`;
     await setSetting('banner_url', url);
-    res.json({ ok: true, url, filename: req.file.filename });
+    res.json({ ok: true, url, filename: req.file.originalname });
   } catch (err) {
     console.error('❌ upload banner error:', err.message);
     res.status(500).json({ error: 'Gagal upload' });
@@ -233,7 +228,7 @@ router.delete('/api/admin/branding/:type', requireAdmin, async (req, res) => {
   try {
     const type = req.params.type;
     const settingKey = type === 'banner' ? 'banner_url' : 'avatar_url';
-    const defaultVal = type === 'banner' ? '' : '/images/logo_blue.webp';
+    const defaultVal = type === 'banner' ? '' : '/images/avatar.png';
     await setSetting(settingKey, defaultVal);
     res.json({ ok: true });
   } catch (err) {
@@ -537,6 +532,51 @@ router.delete('/api/admin/donations/:id(\\d+)', requireAdmin, async (req, res) =
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Gagal hapus' });
+  }
+});
+
+router.delete('/api/admin/donations/batch', requireAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Array ID wajib diisi' });
+    }
+    
+    // Create parameterized placeholders like $1, $2, $3
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+    await query(`DELETE FROM donations WHERE id IN (${placeholders})`, ids);
+    
+    res.json({ ok: true, deleted: ids.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal hapus batch' });
+  }
+});
+
+router.patch('/api/admin/donations/batch/status', requireAdmin, async (req, res) => {
+  try {
+    const { ids, status } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Array ID wajib diisi' });
+    }
+    if (!['pending', 'paid', 'expired', 'cancelled'].includes(status)) {
+      return res.status(400).json({ error: 'Status tidak valid' });
+    }
+
+    const placeholders = ids.map((_, i) => `$${i + 2}`).join(',');
+    const paidAt = status === 'paid' ? 'NOW()' : 'paid_at';
+    
+    // Lakukan update massal
+    await query(
+      `UPDATE donations 
+       SET status = $1, paid_at = ${paidAt}, paid_via = CASE WHEN $1::varchar(20) = 'paid' AND paid_via IS NULL THEN 'admin' ELSE paid_via END
+       WHERE id IN (${placeholders})`,
+      [status, ...ids]
+    );
+
+    res.json({ ok: true, updated: ids.length });
+  } catch (err) {
+    console.error('❌ PATCH batch status error:', err.message);
+    res.status(500).json({ error: 'Gagal update status batch' });
   }
 });
 

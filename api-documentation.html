@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dokumentasi API - Sawerdian</title>
     <meta name="description" content="Dokumentasi lengkap API Sawerdian" />
-    <link rel="icon" type="image/png" href="/images/qris.png" />
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="/assets/css/style.css" />
@@ -108,8 +108,8 @@
     "name": "DRP Network",
     "tagline": "Terima kasih sudah mendukung!",
     "website": "https://dianrp.com",
-    "avatar": "/images/logo_blue.webp",
-    "banner": "",
+    "avatar": "/images/favicon.png",
+    "banner": "/images/banner.png",
     "primaryColor": "#6c5ce7"
   },
   "donation": {
@@ -464,8 +464,8 @@
   "creator_name": "DRP Network",
   "creator_tagline": "Terima kasih!",
   "website_url": "https://dianrp.com",
-  "avatar_url": "/images/logo_blue.webp",
-  "banner_url": "",
+  "avatar_url": "/images/avatar.png",
+  "banner_url": "/images/banner.png",
   "primary_color": "#6c5ce7",
   "qris_static": "00020101021126...",
   "preset_amounts": "5000,10000,20000,50000,100000",
@@ -501,31 +501,31 @@
 
       <div class="endpoint-block bg-base-100">
         <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/branding/logo</code> &#128274;</h3>
-        <p class="text-sm">Upload logo kreator. Disimpan ke <code>/uploads/logos/</code> dan otomatis update setting <code>avatar_url</code>.</p>
+        <p class="text-sm">Upload logo kreator. Disimpan langsung ke <code>/images/</code> dan otomatis update setting <code>avatar_url</code> dengan nama file aslinya.</p>
         <p class="text-xs text-base-content/60 mt-1">Maks 2MB. Format: JPG, PNG, GIF, WEBP. (SVG tidak didukung karena risiko XSS.)</p>
         <h4 class="font-semibold text-sm mt-3">Form Data</h4>
         <pre><code>field: file  (binary image)</code></pre>
         <h4 class="font-semibold text-sm mt-3">cURL</h4>
         <pre><code>curl -b cookies.txt -X POST http://localhost:3003/api/admin/branding/logo \
-  -F "file=@logo.png"</code></pre>
+  -F "file=@avatar.png"</code></pre>
         <h4 class="font-semibold text-sm mt-3">Response</h4>
-        <pre><code>{ "ok": true, "url": "/uploads/logos/1718611200000-abc123.png", "filename": "1718611200000-abc123.png" }</code></pre>
+        <pre><code>{ "ok": true, "url": "/images/avatar.png", "filename": "avatar.png" }</code></pre>
       </div>
 
       <div class="endpoint-block bg-base-100">
         <h3 class="text-lg font-bold"><span class="method-badge post">POST</span><code>/api/admin/branding/banner</code> &#128274;</h3>
-        <p class="text-sm">Upload banner halaman sawer. Disimpan ke <code>/uploads/banners/</code> dan otomatis update setting <code>banner_url</code>.</p>
+        <p class="text-sm">Upload banner halaman sawer. Disimpan langsung ke <code>/images/</code> dan otomatis update setting <code>banner_url</code> dengan nama file aslinya.</p>
         <p class="text-xs text-base-content/60 mt-1">Maks 2MB. Format: JPG, PNG, GIF, WEBP.</p>
         <h4 class="font-semibold text-sm mt-3">cURL</h4>
         <pre><code>curl -b cookies.txt -X POST http://localhost:3003/api/admin/branding/banner \
-  -F "file=@banner.jpg"</code></pre>
+  -F "file=@banner.png"</code></pre>
         <h4 class="font-semibold text-sm mt-3">Response</h4>
-        <pre><code>{ "ok": true, "url": "/uploads/banners/1718611200000-xyz789.jpg", "filename": "1718611200000-xyz789.jpg" }</code></pre>
+        <pre><code>{ "ok": true, "url": "/images/banner.png", "filename": "banner.png" }</code></pre>
       </div>
 
       <div class="endpoint-block bg-base-100">
         <h3 class="text-lg font-bold"><span class="method-badge delete">DELETE</span><code>/api/admin/branding/:type</code> &#128274;</h3>
-        <p class="text-sm">Reset branding ke default. <code>:type</code> = <code>logo</code> (reset ke <code>/images/logo_blue.webp</code>) atau <code>banner</code> (kosongkan).</p>
+        <p class="text-sm">Reset branding ke default. <code>:type</code> = <code>logo</code> (reset ke <code>/images/avatar.png</code>) atau <code>banner</code> (reset ke <code>/images/banner.png</code>).</p>
         <h4 class="font-semibold text-sm mt-3">Response</h4>
         <pre><code>{ "ok": true }</code></pre>
       </div>
