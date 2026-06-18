@@ -310,40 +310,40 @@ async function renderOverview() {
     <div class="space-y-4">
       <!-- Stats cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="stat bg-base-100 rounded-box shadow-sm">
-          <div class="stat-title text-xs">Total Semua</div>
-          <div class="stat-value text-xl">${formatIDR(data.all.total)}</div>
-          <div class="stat-desc">${data.all.count} sawer</div>
+        <div class="stat bg-base-100 rounded-box shadow-md border-2 border-base-300">
+          <div class="stat-title text-xs font-bold text-base-content/70">Total Semua</div>
+          <div class="stat-value text-xl text-base-content">${formatIDR(data.all.total)}</div>
+          <div class="stat-desc font-semibold text-base-content/60">${data.all.count} sawer</div>
         </div>
-        <div class="stat bg-base-100 rounded-box shadow-sm">
-          <div class="stat-title text-xs">Hari Ini</div>
+        <div class="stat bg-base-100 rounded-box shadow-md border-2 border-base-300">
+          <div class="stat-title text-xs font-bold text-base-content/70">Hari Ini</div>
           <div class="stat-value text-xl text-primary">${formatIDR(data.today.total)}</div>
-          <div class="stat-desc">${data.today.count} sawer</div>
+          <div class="stat-desc font-semibold text-base-content/60">${data.today.count} sawer</div>
         </div>
-        <div class="stat bg-base-100 rounded-box shadow-sm">
-          <div class="stat-title text-xs">Bulan Ini</div>
+        <div class="stat bg-base-100 rounded-box shadow-md border-2 border-base-300">
+          <div class="stat-title text-xs font-bold text-base-content/70">Bulan Ini</div>
           <div class="stat-value text-xl text-secondary">${formatIDR(data.month.total)}</div>
-          <div class="stat-desc">${data.month.count} sawer</div>
+          <div class="stat-desc font-semibold text-base-content/60">${data.month.count} sawer</div>
         </div>
-        <div class="stat bg-base-100 rounded-box shadow-sm">
-          <div class="stat-title text-xs">Pending</div>
+        <div class="stat bg-base-100 rounded-box shadow-md border-2 border-base-300">
+          <div class="stat-title text-xs font-bold text-base-content/70">Pending</div>
           <div class="stat-value text-xl text-warning">${data.pending.count}</div>
-          <div class="stat-desc">belum dikonfirmasi</div>
+          <div class="stat-desc font-semibold text-base-content/60">belum dikonfirmasi</div>
         </div>
       </div>
 
       <!-- 7-day chart -->
-      <div class="card bg-base-100 shadow-sm">
+      <div class="card bg-base-100 shadow-md border-2 border-base-300">
         <div class="card-body p-4">
-          <h3 class="font-bold text-sm">7 Hari Terakhir</h3>
+          <h3 class="font-bold text-sm text-base-content">7 Hari Terakhir</h3>
           <div class="flex items-end gap-1 h-32 mt-2">
-            ${data.daily.length === 0 ? '<p class="text-sm text-base-content/50 m-auto">Belum ada data</p>' : data.daily.map((d) => {
+            ${data.daily.length === 0 ? '<p class="text-sm text-base-content/50 m-auto font-medium">Belum ada data</p>' : data.daily.map((d) => {
               const h = Math.max((d.total / maxDay) * 100, 4);
               const dayLabel = new Date(d.day).toLocaleDateString('id-ID', { weekday: 'short' });
               return `
                 <div class="flex-1 flex flex-col items-center gap-1" title="${formatIDR(d.total)} - ${d.count} sawer">
                   <div class="w-full bg-primary/80 rounded-t" style="height: ${h}%"></div>
-                  <span class="text-[10px] text-base-content/60">${dayLabel}</span>
+                  <span class="text-[10px] text-base-content/70 font-bold">${dayLabel}</span>
                 </div>
               `;
             }).join('')}
@@ -352,18 +352,18 @@ async function renderOverview() {
       </div>
 
       <!-- Top 5 -->
-      <div class="card bg-base-100 shadow-sm">
+      <div class="card bg-base-100 shadow-md border-2 border-base-300">
         <div class="card-body p-4">
-          <h3 class="font-bold text-sm">🏆 Top 5 Sawer</h3>
+          <h3 class="font-bold text-sm text-base-content">🏆 Top 5 Sawer</h3>
           <div class="space-y-2 mt-2">
-            ${data.top.length === 0 ? '<p class="text-sm text-base-content/50">Belum ada data</p>' : data.top.map((t, i) => {
+            ${data.top.length === 0 ? '<p class="text-sm text-base-content/50 font-medium">Belum ada data</p>' : data.top.map((t, i) => {
               const medal = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'][i] || `#${i + 1}`;
               return `
-                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-base-200">
+                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-base-200 transition-colors">
                   <span class="text-xl">${medal}</span>
                   <div class="flex-1">
-                    <p class="font-semibold text-sm">${escapeHtml(t.donorName)}</p>
-                    <p class="text-xs text-base-content/50">${formatDate(t.paidAt)}</p>
+                    <p class="font-bold text-sm text-base-content">${escapeHtml(t.donorName)}</p>
+                    <p class="text-xs text-base-content/60 font-medium">${formatDate(t.paidAt)}</p>
                   </div>
                   <p class="font-bold text-primary">${t.amountFormatted}</p>
                 </div>

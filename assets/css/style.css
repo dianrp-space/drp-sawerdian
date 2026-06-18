@@ -36,6 +36,11 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+body.admin-page {
+  background: #f3f4f6; /* Neutral lighter gray background for admin */
+  background-image: none;
+}
+
 /* Override DaisyUI components with neo-brutalism style */
 
 /* Buttons */
