@@ -117,7 +117,7 @@ router.get('/api/admin/dashboard', requireAdmin, async (req, res) => {
     const daily = await query(
       `SELECT DATE(paid_at) as day, COUNT(*) as cnt, COALESCE(SUM(amount), 0) as total
        FROM donations
-       WHERE status = 'paid' AND paid_at >= CURRENT_DATE - INTERVAL '6 days'
+       WHERE status = 'paid' AND paid_at >= NOW() - INTERVAL '7 days'
        GROUP BY DATE(paid_at)
        ORDER BY day ASC`
     );
