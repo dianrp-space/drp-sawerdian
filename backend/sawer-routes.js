@@ -50,6 +50,20 @@ function formatIDR(n) {
   }).format(n);
 }
 
+function normalizeCommentRow(row) {
+  return {
+    id: row.id,
+    donationId: row.donation_id,
+    authorName: row.author_name || 'Anonim',
+    content: row.content,
+    createdAt: row.created_at,
+  };
+}
+
+function isValidCommentAuthorName(name) {
+  return /^[A-Za-zÀ-ÿ\s]+$/.test(name);
+}
+
 function maskName(name) {
   if (!name) return 'Anonim';
   name = String(name).trim();
@@ -96,6 +110,41 @@ function parseAmountFromNotif(text) {
   const n = parseInt(cleaned, 10);
   if (!Number.isFinite(n) || n <= 0) return null;
   return n;
+}
+
+async function insertMacrodroidLog({
+  donationId = null,
+  notifText = '',
+  notifApp = '',
+  notifTitle = '',
+  status = '',
+  parsedAmount = null,
+  requestQuery = {},
+  requestBody = {},
+  matched = false,
+  errorMessage = null,
+}) {
+  try {
+    await query(
+      `INSERT INTO macrodroid_logs
+         (donation_id, notif_text, notif_app, notif_title, status, parsed_amount, request_query, request_body, matched, error_message)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        donationId,
+        notifText || null,
+        notifApp || null,
+        notifTitle || null,
+        status || null,
+        Number.isFinite(parsedAmount) ? parsedAmount : null,
+        JSON.stringify(requestQuery || {}),
+        JSON.stringify(requestBody || {}),
+        matched === true,
+        errorMessage || null,
+      ]
+    );
+  } catch (err) {
+    console.error('❌ Gagal menyimpan macrodroid log:', err.message);
+  }
 }
 
 /**
@@ -164,6 +213,13 @@ const macrodroidLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const commentLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  message: { error: 'Terlalu banyak komentar. Coba lagi dalam 10 menit.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 /* ============================================================
    GET /api/config
    ============================================================ */
@@ -422,7 +478,7 @@ router.post('/api/macrodroid/confirm', macrodroidLimiter, basicAuth, async (req,
     const status = (q.status || q.notification_status || '').toLowerCase();
     const timestamp = q.timestamp || q.time || Date.now();
 
-    console.log(`📩 [Macrodroid] Hit: app="${notifApp}" status="${status}" text="${notifText.substring(0, 150)}"`);
+    console.log(`📩 [Macrodroid] Hit: app="${notifApp}" status="${status}" time="${timestamp}" text="${notifText.substring(0, 150)}"`);
 
     // DEBUG: log raw body kalau notifText kosong supaya user bisa lihat
     // apa yang sebenarnya dikirim Macrodroid
@@ -441,6 +497,17 @@ router.post('/api/macrodroid/confirm', macrodroidLimiter, basicAuth, async (req,
 
     // Filter hanya notifikasi paid
     if (status && status !== 'paid' && status !== 'received' && status !== 'success') {
+      await insertMacrodroidLog({
+        notifText,
+        notifApp,
+        notifTitle,
+        status,
+        parsedAmount: null,
+        requestQuery: req.query,
+        requestBody: req.body,
+        matched: false,
+        errorMessage: `Ignored: status=${status}`,
+      });
       return res.json({ ok: false, message: `Ignored: status=${status}` });
     }
 
@@ -450,8 +517,20 @@ router.post('/api/macrodroid/confirm', macrodroidLimiter, basicAuth, async (req,
       console.log(`❌ [Macrodroid] Gagal parse amount dari notif_text: "${notifText}"`);
       console.log(`📋 [Macrodroid] Raw body: ${JSON.stringify(req.body)}`);
       const contentType = req.headers['content-type'] || 'none';
+      const errorMessage = 'Gagal parse nominal dari notif_text';
+      await insertMacrodroidLog({
+        notifText,
+        notifApp,
+        notifTitle,
+        status,
+        parsedAmount: null,
+        requestQuery: req.query,
+        requestBody: req.body,
+        matched: false,
+        errorMessage,
+      });
       return res.status(400).json({
-        error: 'Gagal parse nominal dari notif_text',
+        error: errorMessage,
         notif_text: notifText,
         notif_app: notifApp,
         raw_body: req.body,
@@ -475,6 +554,17 @@ router.post('/api/macrodroid/confirm', macrodroidLimiter, basicAuth, async (req,
 
     if (findRes.rows.length === 0) {
       console.log(`❌ [Macrodroid] Tidak ada donasi pending untuk amount ${amount}`);
+      await insertMacrodroidLog({
+        notifText,
+        notifApp,
+        notifTitle,
+        status,
+        parsedAmount: amount,
+        requestQuery: req.query,
+        requestBody: req.body,
+        matched: false,
+        errorMessage: 'Tidak ada donasi pending dengan nominal tersebut',
+      });
       return res.status(404).json({
         error: 'Tidak ada donasi pending dengan nominal tersebut',
         amount,
@@ -499,6 +589,20 @@ router.post('/api/macrodroid/confirm', macrodroidLimiter, basicAuth, async (req,
     console.log(
       `✅ Macrodroid confirm: donation #${updated.id} (base Rp ${updated.base_amount} + unique ${updated.unique_code} = Rp ${amount}) via ${notifApp} → paid`
     );
+    console.log(`📝 [Macrodroid] notif_text tersimpan untuk donation #${updated.id}`);
+
+    await insertMacrodroidLog({
+      donationId: updated.id,
+      notifText,
+      notifApp,
+      notifTitle,
+      status,
+      parsedAmount: amount,
+      requestQuery: req.query,
+      requestBody: req.body,
+      matched: true,
+      errorMessage: null,
+    });
 
     // Trigger webhook notif (Discord/Telegram)
     const settings = await getAllSettings();
@@ -569,27 +673,60 @@ router.get('/api/leaderboard', async (req, res) => {
   try {
     const period = req.query.period || 'all';
     const limit = Math.min(parseInt(req.query.limit || '50', 10), 200);
+    const offset = Math.max(parseInt(req.query.offset || '0', 10), 0);
 
     let dateFilter = '';
     if (period === 'today') {
-      dateFilter = `AND paid_at >= CURRENT_DATE`;
+      dateFilter = `AND d.paid_at >= CURRENT_DATE`;
     } else if (period === 'month') {
-      dateFilter = `AND paid_at >= DATE_TRUNC('month', NOW())`;
+      dateFilter = `AND d.paid_at >= DATE_TRUNC('month', NOW())`;
     }
 
+    const totalRes = await query(
+      `SELECT COUNT(*)::int AS total FROM donations d WHERE d.status = 'paid' ${dateFilter}`
+    );
+    const total = totalRes.rows[0]?.total || 0;
+
     const result = await query(
-      `SELECT id, amount, base_amount, unique_code, donor_name, message, paid_at, is_anonymous
-       FROM donations
-       WHERE status = 'paid' ${dateFilter}
-       ORDER BY amount DESC, paid_at DESC
-       LIMIT $1`,
-      [limit]
+      `SELECT
+         d.id,
+         d.amount,
+         d.base_amount,
+         d.unique_code,
+         d.donor_name,
+         d.message,
+         d.paid_at,
+         d.is_anonymous,
+         COALESCE(
+           JSON_AGG(
+             JSON_BUILD_OBJECT(
+               'id', dc.id,
+               'donationId', dc.donation_id,
+               'authorName', dc.author_name,
+               'content', dc.content,
+               'createdAt', dc.created_at
+             )
+             ORDER BY dc.created_at ASC
+           ) FILTER (WHERE dc.id IS NOT NULL),
+           '[]'::json
+         ) AS comments
+       FROM donations d
+       LEFT JOIN donation_comments dc ON dc.donation_id = d.id
+       WHERE d.status = 'paid' ${dateFilter}
+       GROUP BY d.id
+       ORDER BY d.amount DESC, d.paid_at DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
 
     res.json({
       period,
+      limit,
+      offset,
       count: result.rows.length,
+      total,
       items: result.rows.map((d, i) => ({
+        id: d.id,
         rank: i + 1,
         baseAmount: d.base_amount,
         uniqueCode: d.unique_code,
@@ -598,10 +735,132 @@ router.get('/api/leaderboard', async (req, res) => {
         donorName: d.is_anonymous ? maskName(d.donor_name) : (d.donor_name || 'Anonim'),
         message: d.message || null,
         paidAt: d.paid_at,
+        comments: Array.isArray(d.comments) ? d.comments.map(normalizeCommentRow) : [],
+        commentCount: Array.isArray(d.comments) ? d.comments.length : 0,
       })),
     });
   } catch (err) {
     console.error('❌ /api/leaderboard error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+/* ============================================================
+   GET /api/leaderboard/:donationId/comments
+   ============================================================ */
+router.get('/api/leaderboard/:donationId/comments', async (req, res) => {
+  try {
+    const donationId = parseInt(req.params.donationId, 10);
+    if (!Number.isFinite(donationId) || donationId <= 0) {
+      return res.status(400).json({ error: 'ID donasi tidak valid' });
+    }
+
+    const donationRes = await query(
+      `SELECT id, status, message FROM donations WHERE id = $1`,
+      [donationId]
+    );
+
+    if (donationRes.rows.length === 0 || donationRes.rows[0].status !== 'paid') {
+      return res.status(404).json({ error: 'Pesan tidak ditemukan' });
+    }
+
+    const commentsRes = await query(
+      `SELECT id, donation_id, author_name, content, created_at
+       FROM donation_comments
+       WHERE donation_id = $1
+       ORDER BY created_at ASC
+       LIMIT 100`,
+      [donationId]
+    );
+
+    res.json({
+      donationId,
+      message: donationRes.rows[0].message || null,
+      count: commentsRes.rows.length,
+      limit: 100,
+      items: commentsRes.rows.map(normalizeCommentRow),
+    });
+  } catch (err) {
+    console.error('❌ GET /api/leaderboard/:donationId/comments error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/* ============================================================
+   POST /api/leaderboard/:donationId/comments
+   ============================================================ */
+router.post('/api/leaderboard/:donationId/comments', commentLimiter, async (req, res) => {
+  try {
+    const donationId = parseInt(req.params.donationId, 10);
+    const { authorName, content } = req.body || {};
+
+    if (!Number.isFinite(donationId) || donationId <= 0) {
+      return res.status(400).json({ error: 'ID donasi tidak valid' });
+    }
+
+    const cleanAuthorName = String(authorName || '').trim().substring(0, 100);
+    const cleanContent = String(content || '').trim().substring(0, 500);
+
+    if (!cleanAuthorName) {
+      return res.status(400).json({ error: 'Nama komentar wajib diisi' });
+    }
+
+    if (!isValidCommentAuthorName(cleanAuthorName)) {
+      return res.status(400).json({ error: 'Nama komentar hanya boleh berisi huruf dan spasi' });
+    }
+
+    if (!cleanContent) {
+      return res.status(400).json({ error: 'Komentar tidak boleh kosong' });
+    }
+
+    const donationRes = await query(
+      `SELECT id, status, message FROM donations WHERE id = $1`,
+      [donationId]
+    );
+
+    if (donationRes.rows.length === 0 || donationRes.rows[0].status !== 'paid') {
+      return res.status(404).json({ error: 'Pesan tidak ditemukan' });
+    }
+
+    if (!donationRes.rows[0].message) {
+      return res.status(400).json({ error: 'Donasi ini tidak memiliki pesan untuk dikomentari' });
+    }
+
+    const countRes = await query(
+      `SELECT COUNT(*)::int AS count FROM donation_comments WHERE donation_id = $1`,
+      [donationId]
+    );
+
+    if (countRes.rows[0].count >= 100) {
+      return res.status(400).json({
+        error: 'Batas maksimum 100 komentar untuk pesan ini telah tercapai',
+      });
+    }
+
+    const insertRes = await query(
+      `INSERT INTO donation_comments
+         (donation_id, author_name, content, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, donation_id, author_name, content, created_at`,
+      [
+        donationId,
+        cleanAuthorName,
+        cleanContent,
+        req.ip || req.headers['x-forwarded-for'] || null,
+        (req.headers['user-agent'] || '').substring(0, 500),
+      ]
+    );
+
+    const comment = normalizeCommentRow(insertRes.rows[0]);
+
+    res.status(201).json({
+      ok: true,
+      message: 'Komentar berhasil ditambahkan',
+      comment,
+      remaining: Math.max(0, 99 - countRes.rows[0].count),
+      limit: 100,
+    });
+  } catch (err) {
+    console.error('❌ POST /api/leaderboard/:donationId/comments error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

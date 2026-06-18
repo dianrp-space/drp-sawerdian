@@ -1,5 +1,6 @@
 /**
  * Sawerdian - Halaman Leaderboard publik
+ * Menampilkan nama + nominal sawer (tanpa pesan dan tanpa komentar).
  */
 
 // ============================================
@@ -17,10 +18,20 @@ const API_BASE = (() => {
   return '';
 })();
 
-async function api(path) {
-  const res = await fetch(API_BASE + path, { credentials: 'include' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+async function api(path, options = {}) {
+  const res = await fetch(API_BASE + path, {
+    credentials: 'include',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.error || `HTTP ${res.status}`);
+  }
+  return data;
 }
 
 // ============================================
@@ -162,7 +173,7 @@ async function loadLeaderboard() {
     document.getElementById('lastUpdate').textContent = `Update: ${new Date().toLocaleTimeString('id-ID')}`;
   } catch (err) {
     console.error(err);
-    showToast('Gagal memuat leaderboard', 'error');
+    showToast(err.message || 'Gagal memuat leaderboard', 'error');
   } finally {
     loading.classList.add('hidden');
   }
@@ -188,7 +199,7 @@ function renderList() {
     el.style.animationDelay = `${i * 0.05}s`;
     el.innerHTML = `
       <div class="card-body p-3">
-        <div class="flex items-start gap-3">
+        <div class="flex items-center gap-3">
           <div class="text-2xl font-bold w-12 text-center ${rankClass}">${medal}</div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
@@ -196,7 +207,6 @@ function renderList() {
               <span class="text-xs text-base-content/50">•</span>
               <span class="text-xs text-base-content/50">${timeAgo(item.paidAt)}</span>
             </div>
-            ${item.message ? `<p class="text-sm text-base-content/70 mt-1 line-clamp-2">"${escapeHtml(item.message)}"</p>` : ''}
           </div>
           <div class="text-right flex-shrink-0">
             <div class="font-bold text-primary text-lg">${item.amountFormatted}</div>

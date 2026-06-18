@@ -48,6 +48,35 @@ ALTER TABLE donations ADD COLUMN IF NOT EXISTS unique_code INTEGER DEFAULT 0;
 ALTER TABLE donations ADD COLUMN IF NOT EXISTS paid_via_app VARCHAR(50);
 ALTER TABLE donations ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN DEFAULT false;
 
+-- Komentar pada pesan donasi (maks 100 komentar per pesan, dibatasi di aplikasi)
+CREATE TABLE IF NOT EXISTS donation_comments (
+  id          SERIAL PRIMARY KEY,
+  donation_id INTEGER NOT NULL REFERENCES donations(id) ON DELETE CASCADE,
+  author_name VARCHAR(100),
+  content     TEXT NOT NULL,
+  ip_address  VARCHAR(64),
+  user_agent  TEXT,
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_donation_comments_donation_id ON donation_comments(donation_id, created_at ASC);
+
+-- Log request notif dari Macrodroid
+CREATE TABLE IF NOT EXISTS macrodroid_logs (
+  id             SERIAL PRIMARY KEY,
+  donation_id    INTEGER REFERENCES donations(id) ON DELETE SET NULL,
+  notif_text     TEXT,
+  notif_app      VARCHAR(100),
+  notif_title    TEXT,
+  status         VARCHAR(50),
+  parsed_amount  INTEGER,
+  request_query  TEXT,
+  request_body   TEXT,
+  matched        BOOLEAN DEFAULT false,
+  error_message  TEXT,
+  created_at     TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_macrodroid_logs_created_at ON macrodroid_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_macrodroid_logs_donation_id ON macrodroid_logs(donation_id);
 
 -- Webhooks
 CREATE TABLE IF NOT EXISTS webhooks (

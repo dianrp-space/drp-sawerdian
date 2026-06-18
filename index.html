@@ -131,6 +131,36 @@
       <p class="text-center text-xs text-base-content/50 my-4 animate-fade-in-up animate-fade-in-up-d3">
         Pembayaran via QRIS • Didukung oleh semua e-wallet & mobile banking
       </p>
+
+      <!-- SECTION PESAN & KOMENTAR -->
+      <section id="commentsSection" class="card bg-base-100 shadow-xl my-4 animate-fade-in-up">
+        <div class="card-body p-4">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <h2 class="card-title text-lg flex items-center gap-2">
+              <span aria-hidden="true">💬</span> Pesan & Komentar
+            </h2>
+            <span id="commentsCount" class="text-xs text-base-content/50">Memuat...</span>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button type="button" class="btn btn-xs btn-primary comment-period-btn" data-period="all">Semua</button>
+            <button type="button" class="btn btn-xs btn-outline comment-period-btn" data-period="today">Hari Ini</button>
+            <button type="button" class="btn btn-xs btn-outline comment-period-btn" data-period="month">Bulan Ini</button>
+          </div>
+
+          <div id="messagesList" class="space-y-2 mb-3">
+            <div class="skeleton h-12 w-full"></div>
+            <div class="skeleton h-12 w-full"></div>
+          </div>
+
+          <div class="text-center my-2">
+            <button id="loadMoreMessagesBtn" type="button" class="btn btn-outline btn-sm hidden">
+              Muat lebih banyak
+            </button>
+          </div>
+
+        </div>
+      </section>
     </main>
 
     <!-- Toast notifications -->
@@ -145,5 +175,6 @@
     </footer>
 
     <script src="/assets/js/sawer.js?v=2"></script>
+    <script src="/assets/js/comments.js?v=1"></script>
   </body>
 </html>
