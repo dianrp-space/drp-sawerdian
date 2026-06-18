@@ -236,7 +236,7 @@ function getIcon(platform) {
     pinterest: { text: 'P',  bg: '#E60023' },
     spotify:   { text: '♪',  bg: '#1DB954' },
     twitch:    { text: 'Tv', bg: '#9146FF' },
-    website:   { text: 'W',  bg: '#6b7280' },
+    website:   { text: '🌐', bg: '#6b7280' },
     other:     { text: '?',  bg: '#6b7280' },
   };
   const b = map[p] || map.other;
