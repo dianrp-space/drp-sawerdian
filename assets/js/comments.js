@@ -61,7 +61,7 @@
   // ============================================
   // State
   // ============================================
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 100; // Ambil batch cukup besar untuk mencari top 3 sawer yang meninggalkan pesan
   const PREVIEW_COMMENTS = 2;
   const state = {
     period: 'all',
@@ -268,8 +268,10 @@
         `/api/leaderboard?period=${state.period}&limit=${PAGE_SIZE}&offset=${state.offset}`
       );
       const newItems = (data.items || []).filter((item) => Boolean(item.message));
-      state.items = state.items.concat(newItems);
-      state.total = data.total ?? data.count ?? state.items.length;
+      
+      // Hanya ambil 3 teratas dengan nilai sawer terbesar
+      state.items = newItems.slice(0, 3);
+      state.total = state.items.length;
       state.offset = state.items.length;
 
       // Rebuild options for "komentar baru" form (only donations with message + paid)
