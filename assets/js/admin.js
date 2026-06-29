@@ -268,6 +268,9 @@ async function loadTab(tab) {
       case 'donations':
         await renderDonations();
         break;
+      case 'comments':
+        await renderComments();
+        break;
       case 'branding':
         await renderBranding();
         break;
@@ -653,6 +656,100 @@ async function deleteDonation(id) {
     await api(`/api/admin/donations/${id}`, { method: 'DELETE' });
     showToast('Donasi dihapus', 'success');
     renderDonations(state.data.donations.page);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ============================================
+// TAB: COMMENTS
+// ============================================
+async function renderComments(page = 1) {
+  const data = await api(`/api/admin/comments?page=${page}&limit=20`);
+  state.data.comments = data;
+
+  document.getElementById('tabContent').innerHTML = `
+    <div class="space-y-3">
+      <div class="flex flex-wrap gap-2 items-center justify-between">
+        <h2 class="text-xl font-bold">💬 Comments</h2>
+      </div>
+
+      <!-- Tabel -->
+      <div class="card bg-base-100 shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Donasi</th>
+                <th>Pengirim</th>
+                <th>Komentar</th>
+                <th>IP Address</th>
+                <th>Waktu</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${renderCommentsRows(data.items)}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-body p-3 border-t border-base-300 flex-row items-center justify-between">
+          <span class="text-sm text-base-content/60">Total: <strong>${data.total}</strong> komentar</span>
+          <div class="join">
+            <button class="join-item btn btn-sm" id="prevCommentsPage" ${page <= 1 ? 'disabled' : ''}>«</button>
+            <button class="join-item btn btn-sm">Halaman ${page}</button>
+            <button class="join-item btn btn-sm" id="nextCommentsPage" ${data.items.length < 20 ? 'disabled' : ''}>»</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Event handlers
+  document.getElementById('prevCommentsPage').addEventListener('click', () => {
+    if (page > 1) renderComments(page - 1);
+  });
+  document.getElementById('nextCommentsPage').addEventListener('click', () => {
+    if (data.items.length >= 20) renderComments(page + 1);
+  });
+  document.querySelectorAll('[data-action="delete-comment"]').forEach((b) => {
+    b.addEventListener('click', () => deleteComment(b.dataset.id));
+  });
+}
+
+function renderCommentsRows(items) {
+  if (items.length === 0) {
+    return '<tr><td colspan="7" class="text-center py-8 text-base-content/50">Belum ada komentar</td></tr>';
+  }
+  return items.map((c) => `
+    <tr>
+      <td class="text-xs text-base-content/50">#${c.id}</td>
+      <td>
+        <div class="text-xs">
+          <span class="font-bold">#${c.donation_id}</span> oleh ${escapeHtml(c.donation_donor_name || 'Anonim')}
+        </div>
+        <div class="text-xs italic text-base-content/60">"${escapeHtml(c.donation_message || '')}"</div>
+      </td>
+      <td>
+        <div class="font-semibold text-sm">${escapeHtml(c.author_name || 'Anonim')}</div>
+      </td>
+      <td class="text-sm font-medium whitespace-pre-wrap break-all">${escapeHtml(c.content)}</td>
+      <td class="text-xs font-mono">${escapeHtml(c.ip_address || '-')}</td>
+      <td class="text-xs">${formatDate(c.created_at)}</td>
+      <td>
+        <button class="btn btn-xs btn-ghost text-error" data-action="delete-comment" data-id="${c.id}" title="Hapus Komentar">🗑 Hapus</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteComment(id) {
+  if (!confirm('Hapus komentar ini secara permanen?')) return;
+  try {
+    await api(`/api/admin/comments/${id}`, { method: 'DELETE' });
+    showToast('Komentar berhasil dihapus', 'success');
+    renderComments(state.data.comments?.page || 1);
   } catch (err) {
     showToast(err.message, 'error');
   }

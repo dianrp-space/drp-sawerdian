@@ -648,4 +648,50 @@ router.post('/api/admin/qris/preview', requireAdmin, uploadLogo.single('file'), 
   }
 });
 
+/* ============================================================
+   COMMENTS MANAGEMENT
+   ============================================================ */
+router.get('/api/admin/comments', requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.min(parseInt(req.query.limit || '20', 10), 100);
+    const offset = (page - 1) * limit;
+
+    const countRes = await query(`SELECT COUNT(*)::int as total FROM donation_comments`);
+    const result = await query(
+      `SELECT dc.id, dc.donation_id, dc.author_name, dc.content, dc.ip_address, dc.created_at,
+              d.donor_name AS donation_donor_name, d.message AS donation_message
+       FROM donation_comments dc
+       LEFT JOIN donations d ON d.id = dc.donation_id
+       ORDER BY dc.created_at DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+
+    res.json({
+      page,
+      limit,
+      total: countRes.rows[0].total,
+      items: result.rows,
+    });
+  } catch (err) {
+    console.error('❌ /api/admin/comments error:', err.message);
+    res.status(500).json({ error: 'Gagal load comments' });
+  }
+});
+
+router.delete('/api/admin/comments/:id(\\d+)', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const delRes = await query(`DELETE FROM donation_comments WHERE id = $1 RETURNING *`, [id]);
+    if (delRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Komentar tidak ditemukan' });
+    }
+    res.json({ ok: true, message: 'Komentar berhasil dihapus' });
+  } catch (err) {
+    console.error('❌ DELETE /api/admin/comments/:id error:', err.message);
+    res.status(500).json({ error: 'Gagal hapus komentar' });
+  }
+});
+
 export default router;
