@@ -62,105 +62,110 @@
         </div>
       </section>
 
-      <!-- CARD PILIH NOMINAL -->
-      <section class="card bg-base-100 shadow-xl animate-fade-in-up animate-fade-in-up-d2">
-        <div class="card-body">
-          <h2 class="card-title text-lg flex items-center gap-2">
-            <span aria-hidden="true">💸</span> Pilih Nominal
-          </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start my-4">
+        <!-- Kiri: Form Pilih Nominal -->
+        <div class="space-y-4">
+          <!-- CARD PILIH NOMINAL -->
+          <section class="card bg-base-100 shadow-xl animate-fade-in-up animate-fade-in-up-d2">
+            <div class="card-body">
+              <h2 class="card-title text-lg flex items-center gap-2">
+                <span aria-hidden="true">💸</span> Pilih Nominal
+              </h2>
 
-          <div id="presetGrid" class="grid grid-cols-3 gap-2 mt-2">
-            <!-- Preset buttons will be inserted here -->
-          </div>
+              <div id="presetGrid" class="grid grid-cols-3 gap-2 mt-2">
+                <!-- Preset buttons will be inserted here -->
+              </div>
 
-          <div class="divider text-xs text-base-content/50 my-2">atau</div>
+              <div class="divider text-xs text-base-content/50 my-2">atau</div>
 
-          <!-- Custom amount + name + message -->
-          <div class="space-y-3">
-            <label class="floating-label">
-              <span>Tentukan sendiri saweranmu (Rp)</span>
-              <input
-                type="number"
-                id="customAmount"
-                class="input input-bordered w-full"
-                placeholder="💸 2000"
-                min="2000"
-                max="500000"
-              />
-            </label>
+              <!-- Custom amount + name + message -->
+              <div class="space-y-3">
+                <label class="floating-label">
+                  <span>Tentukan sendiri saweranmu (Rp)</span>
+                  <input
+                    type="number"
+                    id="customAmount"
+                    class="input input-bordered w-full"
+                    placeholder="💸 2000"
+                    min="2000"
+                    max="500000"
+                  />
+                </label>
 
-            <div class="divider text-xs text-base-content/50 my-2">Nama dan Pesan</div>
+                <div class="divider text-xs text-base-content/50 my-2">Nama dan Pesan</div>
 
-            <div id="donorNameWrap" class="space-y-2">
-              <label class="floating-label">
-                <span>Namamu, random jika kosong</span>
-                <input
-                  type="text"
-                  id="donorName"
-                  class="input input-bordered w-full"
-                  placeholder="contoh: Anonim"
-                  maxlength="100"
-                />
-              </label>
-              <label class="label cursor-pointer justify-start gap-2 pt-0">
-                <input type="checkbox" id="isAnonymous" class="checkbox checkbox-sm" />
-                <span class="text-xs text-base-content/70 font-semibold">Tampilkan nama sebagai anonim di ranking</span>
-              </label>
+                <div id="donorNameWrap" class="space-y-2">
+                  <label class="floating-label">
+                    <span>Namamu, random jika kosong</span>
+                    <input
+                      type="text"
+                      id="donorName"
+                      class="input input-bordered w-full"
+                      placeholder="contoh: Anonim"
+                      maxlength="100"
+                    />
+                  </label>
+                  <label class="label cursor-pointer justify-start gap-2 pt-0">
+                    <input type="checkbox" id="isAnonymous" class="checkbox checkbox-sm" />
+                    <span class="text-xs text-base-content/70 font-semibold">Tampilkan nama sebagai anonim di ranking</span>
+                  </label>
+                </div>
+
+                <label class="floating-label" id="messageWrap">
+                  <span>Pesan / dukungan (opsional)</span>
+                  <textarea
+                    id="message"
+                    class="textarea textarea-bordered w-full"
+                    placeholder="contoh: Semangat terus! 🚀"
+                    maxlength="500"
+                    rows="2"
+                  ></textarea>
+                </label>
+              </div>
+
+              <button id="sawerBtn" class="btn btn-primary btn-lg btn-block mt-4" disabled>
+                <span class="loading loading-spinner loading-sm hidden" id="btnLoading"></span>
+                <span id="btnText">Pilih nominal dulu</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Info -->
+          <p class="text-center text-xs text-base-content/50 animate-fade-in-up animate-fade-in-up-d3">
+            Pembayaran via QRIS • Didukung oleh semua e-wallet & mobile banking
+          </p>
+        </div>
+
+        <!-- Kanan: SECTION PESAN & KOMENTAR -->
+        <section id="commentsSection" class="card bg-base-100 shadow-xl animate-fade-in-up">
+          <div class="card-body p-4">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <h2 class="card-title text-lg flex items-center gap-2">
+                <span aria-hidden="true">💬</span> Pesan & Komentar
+              </h2>
+              <span id="commentsCount" class="text-xs text-base-content/50">Memuat...</span>
             </div>
 
-            <label class="floating-label" id="messageWrap">
-              <span>Pesan / dukungan (opsional)</span>
-              <textarea
-                id="message"
-                class="textarea textarea-bordered w-full"
-                placeholder="contoh: Semangat terus! 🚀"
-                maxlength="500"
-                rows="2"
-              ></textarea>
-            </label>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <button type="button" class="btn btn-xs btn-primary comment-period-btn" data-period="all">Semua</button>
+              <button type="button" class="btn btn-xs btn-outline comment-period-btn" data-period="today">Hari Ini</button>
+              <button type="button" class="btn btn-xs btn-outline comment-period-btn" data-period="month">Bulan Ini</button>
+            </div>
+
+            <div id="messagesList" class="space-y-2 mb-3">
+              <div class="skeleton h-12 w-full"></div>
+              <div class="skeleton h-12 w-full"></div>
+            </div>
+
+            <div class="text-center my-2">
+              <button id="loadMoreMessagesBtn" type="button" class="btn btn-outline btn-sm hidden">
+                Muat lebih banyak
+              </button>
+            </div>
+
           </div>
-
-          <button id="sawerBtn" class="btn btn-primary btn-lg btn-block mt-4" disabled>
-            <span class="loading loading-spinner loading-sm hidden" id="btnLoading"></span>
-            <span id="btnText">Pilih nominal dulu</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- Info -->
-      <p class="text-center text-xs text-base-content/50 my-4 animate-fade-in-up animate-fade-in-up-d3">
-        Pembayaran via QRIS • Didukung oleh semua e-wallet & mobile banking
-      </p>
-
-      <!-- SECTION PESAN & KOMENTAR -->
-      <section id="commentsSection" class="card bg-base-100 shadow-xl my-4 animate-fade-in-up">
-        <div class="card-body p-4">
-          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
-            <h2 class="card-title text-lg flex items-center gap-2">
-              <span aria-hidden="true">💬</span> Pesan & Komentar
-            </h2>
-            <span id="commentsCount" class="text-xs text-base-content/50">Memuat...</span>
-          </div>
-
-          <div class="flex flex-wrap gap-2 mb-3">
-            <button type="button" class="btn btn-xs btn-primary comment-period-btn" data-period="all">Semua</button>
-            <button type="button" class="btn btn-xs btn-outline comment-period-btn" data-period="today">Hari Ini</button>
-            <button type="button" class="btn btn-xs btn-outline comment-period-btn" data-period="month">Bulan Ini</button>
-          </div>
-
-          <div id="messagesList" class="space-y-2 mb-3">
-            <div class="skeleton h-12 w-full"></div>
-            <div class="skeleton h-12 w-full"></div>
-          </div>
-
-          <div class="text-center my-2">
-            <button id="loadMoreMessagesBtn" type="button" class="btn btn-outline btn-sm hidden">
-              Muat lebih banyak
-            </button>
-          </div>
-
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
 
     <!-- Toast notifications -->

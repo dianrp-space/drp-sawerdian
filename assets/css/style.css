@@ -316,6 +316,13 @@ body.admin-page {
   max-width: 480px;
   margin-inline: auto;
   padding: 1rem;
+  transition: max-width 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .sawer-container {
+    max-width: 960px;
+  }
 }
 
 /* Brand icons - brutalist style */

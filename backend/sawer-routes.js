@@ -59,10 +59,10 @@ function formatIDR(n) {
 function normalizeCommentRow(row) {
   return {
     id: row.id,
-    donationId: row.donation_id,
-    authorName: row.author_name || 'Anonim',
+    donationId: row.donation_id || row.donationId,
+    authorName: row.author_name || row.authorName || 'Anonim',
     content: row.content,
-    createdAt: row.created_at,
+    createdAt: row.created_at || row.createdAt,
   };
 }
 
